@@ -3,6 +3,19 @@ import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
 
 function getOpenAIClient() {
+  const isAzure = process.env.OPENAI_BASE_URL?.includes('cognitiveservices.azure.com');
+  
+  if (isAzure) {
+    // Azure OpenAI uses api-key header and different base URL format
+    const baseUrl = process.env.OPENAI_BASE_URL!.split('/openai/')[0];
+    return new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: `${baseUrl}/openai/deployments/gpt-4o-mini`,
+      defaultQuery: { 'api-version': '2024-10-21' },
+      defaultHeaders: { 'api-key': process.env.OPENAI_API_KEY! },
+    });
+  }
+
   return new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     baseURL: process.env.OPENAI_BASE_URL,
