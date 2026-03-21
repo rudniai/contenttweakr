@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface Opportunity {
+  id?: string;
   date: string;
   subreddit: string;
   title: string;
@@ -18,12 +19,31 @@ interface Opportunity {
 export default function RedditFinderPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSaved, setLoadingSaved] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scannedCount, setScannedCount] = useState(0);
   const [timeRange, setTimeRange] = useState('24 hours');
   const [selectedHours, setSelectedHours] = useState(24);
   const [generatingIdx, setGeneratingIdx] = useState<Set<number>>(new Set());
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  // Load saved opportunities from DB on mount
+  useEffect(() => {
+    async function loadSaved() {
+      try {
+        const res = await fetch('/api/reddit/opportunities/saved');
+        const data = await res.json();
+        if (res.ok && data.opportunities?.length > 0) {
+          setOpportunities(data.opportunities);
+        }
+      } catch (err) {
+        console.error('Failed to load saved opportunities:', err);
+      } finally {
+        setLoadingSaved(false);
+      }
+    }
+    loadSaved();
+  }, []);
 
   const findOpportunities = async () => {
     setLoading(true);
@@ -60,6 +80,7 @@ export default function RedditFinderPage() {
           title: opp.title,
           context: opp.context,
           subreddit: opp.subreddit,
+          opportunityUrl: opp.url,
         }),
       });
       const data = await res.json();
@@ -95,7 +116,7 @@ export default function RedditFinderPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Reddit Opportunity Finder
+            FSA ContentTweakr
           </h1>
           <p className="text-slate-400">
             Find relevant Reddit posts where FreeSiteAudit can genuinely help
@@ -160,8 +181,15 @@ export default function RedditFinderPage() {
           </div>
         )}
 
+        {/* Loading saved state */}
+        {loadingSaved && (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
         {/* Empty State */}
-        {opportunities.length === 0 && !loading && !error && (
+        {!loadingSaved && opportunities.length === 0 && !loading && !error && (
           <div className="text-center py-12 text-slate-500">
             Click &quot;Find Opportunities&quot; to scan Reddit
           </div>
@@ -177,7 +205,7 @@ export default function RedditFinderPage() {
             <div className="space-y-4">
               {opportunities.map((opp, idx) => (
                 <div
-                  key={idx}
+                  key={opp.url}
                   className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:border-slate-600/50 transition-all duration-200"
                 >
                   {/* Header */}

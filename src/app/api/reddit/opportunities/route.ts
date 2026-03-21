@@ -144,10 +144,35 @@ export async function GET(request: NextRequest) {
     // Sort by confidence
     opportunities.sort((a, b) => b.confidence - a.confidence);
 
+    const top20 = opportunities.slice(0, 20);
+
+    // Save to database (upsert to avoid duplicates)
+    if (top20.length > 0) {
+      const rows = top20.map((opp) => ({
+        user_id: user.id,
+        subreddit: opp.subreddit,
+        title: opp.title,
+        url: opp.url,
+        context: opp.context,
+        confidence: opp.confidence,
+        upvotes: opp.upvotes,
+        comments: opp.comments,
+        scanned_at: new Date().toISOString(),
+      }));
+
+      const { error: dbError } = await supabase
+        .from('opportunities')
+        .upsert(rows, { onConflict: 'user_id,url' });
+
+      if (dbError) {
+        console.error('Error saving opportunities to DB:', dbError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      count: opportunities.length,
-      opportunities: opportunities.slice(0, 20), // Top 20
+      count: top20.length,
+      opportunities: top20,
       scannedSubreddits: SUBREDDITS.length,
       timeRange: `${hours} hours`
     });

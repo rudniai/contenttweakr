@@ -7,6 +7,7 @@ interface GenerateRequest {
   title: string;
   context: string;
   subreddit: string;
+  opportunityUrl?: string; // used to look up the opportunity in DB
 }
 
 interface GenerateResponse {
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { title, context, subreddit } = body;
+    const { title, context, subreddit, opportunityUrl } = body;
 
     if (!title || !subreddit) {
       return NextResponse.json({ success: false, error: "title and subreddit are required" }, { status: 400 });
@@ -234,7 +235,31 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     // 3. Generate response
     const { text } = generateResponse(title, context || "", subreddit);
 
-    // 4. Return
+    // 4. Save response to DB if we can find the opportunity
+    if (opportunityUrl) {
+      const { data: opp } = await supabase
+        .from('opportunities')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('url', opportunityUrl)
+        .single();
+
+      if (opp) {
+        const { error: saveError } = await supabase
+          .from('generated_responses')
+          .insert({
+            opportunity_id: opp.id,
+            user_id: user.id,
+            response_text: text,
+          });
+
+        if (saveError) {
+          console.error('Error saving response to DB:', saveError);
+        }
+      }
+    }
+
+    // 5. Return
     return NextResponse.json({
       success: true,
       response: text,

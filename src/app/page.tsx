@@ -61,7 +61,7 @@ export default function LoginPage() {
               R
             </div>
             <span className="text-lg font-semibold tracking-tight text-slate-200">
-              Reddit Intel
+              FSA ContentTweakr
             </span>
           </div>
 
@@ -144,9 +144,9 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-24 max-w-2xl">
           <div className="animate-[fadeIn_0.6s_ease-out]">
             <h2 className="text-3xl xl:text-4xl font-semibold tracking-tight leading-tight mb-3">
-              Reddit Marketing
+              FSA Content
               <br />
-              <span className="text-blue-400">Intelligence</span>
+              <span className="text-blue-400">Marketing</span>
             </h2>
             <p className="text-slate-400 text-base leading-relaxed mb-12 max-w-md">
               Find genuine opportunities. Generate human-like responses. Build karma organically.

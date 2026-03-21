@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Reddit Intel - Marketing Intelligence for Reddit",
-  description: "Find genuine opportunities. Generate human-like responses. Build karma organically with AI-powered Reddit marketing intelligence.",
+  title: "FSA ContentTweakr - Content Marketing Intelligence",
+  description: "Find genuine opportunities on Reddit. Generate human-like responses. Build karma organically with AI-powered content marketing.",
 };
 
 export default function RootLayout({
