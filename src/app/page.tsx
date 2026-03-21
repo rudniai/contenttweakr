@@ -1,178 +1,185 @@
-import Link from 'next/link';
-import Image from 'next/image';
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard/reddit-finder')
+      else setCheckingAuth(false)
+    })
+  }, [router, supabase.auth])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      router.replace('/dashboard/reddit-finder')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const features = [
+    { icon: '🔍', title: 'Smart Opportunity Detection', desc: 'AI scans thousands of posts to find threads where your product naturally fits the conversation.' },
+    { icon: '🤖', title: 'Claude Opus-Powered Responses', desc: 'Generate authentic, context-aware replies that add genuine value — never spammy, always helpful.' },
+    { icon: '📊', title: 'Real-time Scanning', desc: 'Monitor subreddits 24/7 and get instant alerts when high-potential opportunities appear.' },
+    { icon: '✅', title: 'Ban-Proof Strategy', desc: 'Built-in compliance checks ensure every response follows subreddit rules and Reddit guidelines.' },
+  ]
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
-          <div className="text-center">
-            <div className="flex justify-center mb-8">
-              <Image src="/logo.svg" alt="ContentTweakr" width={80} height={80} />
+    <div className="min-h-screen bg-slate-950 text-white flex">
+      {/* Left — Login */}
+      <div className="w-full lg:w-[480px] flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12 relative z-10">
+        <div className="max-w-sm mx-auto w-full animate-[fadeIn_0.5s_ease-out]">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-12">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-lg font-bold shadow-lg shadow-blue-500/20">
+              R
             </div>
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6">
-              Repurpose Content in Seconds
-            </h1>
-            <p className="text-xl sm:text-2xl mb-8 text-indigo-100 max-w-2xl mx-auto">
-              Transform your content for Twitter, LinkedIn, Instagram, Email, and Reddit with AI-powered repurposing
+            <span className="text-lg font-semibold tracking-tight text-slate-200">
+              Reddit Intel
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight mb-2">Welcome back</h1>
+          <p className="text-slate-400 text-sm mb-8">Sign in to your account to continue.</p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-xs font-medium text-slate-400 mb-1.5">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-xs font-medium text-slate-400 mb-1.5">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3.5 py-2.5 text-sm text-red-400 animate-[fadeIn_0.2s_ease-out]">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed px-3.5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </button>
+          </form>
+
+          <p className="text-xs text-slate-600 mt-8 text-center">
+            Access is restricted to authorized users only.
+          </p>
+        </div>
+      </div>
+
+      {/* Right — Feature showcase */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950" />
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-blue-400/5 rounded-full blur-3xl" />
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col justify-center px-16 xl:px-24 max-w-2xl">
+          <div className="animate-[fadeIn_0.6s_ease-out]">
+            <h2 className="text-3xl xl:text-4xl font-semibold tracking-tight leading-tight mb-3">
+              Reddit Marketing
+              <br />
+              <span className="text-blue-400">Intelligence</span>
+            </h2>
+            <p className="text-slate-400 text-base leading-relaxed mb-12 max-w-md">
+              Find genuine opportunities. Generate human-like responses. Build karma organically.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/auth/signup"
-                className="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/auth/login"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition"
-              >
-                Sign In
-              </Link>
+
+            <div className="space-y-6">
+              {features.map((f, i) => (
+                <div
+                  key={f.title}
+                  className="flex gap-4 group animate-[fadeIn_0.5s_ease-out]"
+                  style={{ animationDelay: `${(i + 1) * 100}ms`, animationFillMode: 'both' }}
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-lg group-hover:border-blue-500/30 group-hover:bg-blue-500/5 transition-colors">
+                    {f.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-200 mb-0.5">{f.title}</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Features Grid */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 text-gray-900">
-            Why ContentTweakr?
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Lightning Fast</h3>
-              <p className="text-gray-600">
-                Transform your content for multiple platforms in seconds, not hours
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Platform Optimized</h3>
-              <p className="text-gray-600">
-                Each output is tailored to the specific platform&apos;s best practices
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Smart AI</h3>
-              <p className="text-gray-600">
-                Powered by advanced AI that understands context and tone
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 text-gray-900">
-            Simple, Transparent Pricing
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="border-2 border-gray-200 rounded-xl p-8">
-              <h3 className="text-2xl font-bold mb-2 text-gray-900">Free</h3>
-              <p className="text-gray-600 mb-6">Perfect for trying out ContentTweakr</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$0</span>
-                <span className="text-gray-600">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  5 repurposes per day
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  All 5 platforms
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Basic support
-                </li>
-              </ul>
-              <Link
-                href="/auth/signup"
-                className="block w-full text-center bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
-              >
-                Start Free
-              </Link>
-            </div>
-            <div className="border-2 border-indigo-600 rounded-xl p-8 relative">
-              <div className="absolute top-0 right-0 bg-indigo-600 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg text-sm font-semibold">
-                Popular
-              </div>
-              <h3 className="text-2xl font-bold mb-2 text-gray-900">Pro</h3>
-              <p className="text-gray-600 mb-6">For serious content creators</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$9</span>
-                <span className="text-gray-600">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Unlimited repurposes
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  All 5 platforms
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Priority support
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Advanced customization
-                </li>
-              </ul>
-              <Link
-                href="/auth/signup"
-                className="block w-full text-center bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-              >
-                Go Pro
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2024 ContentTweakr. All rights reserved.</p>
-        </div>
-      </footer>
+      {/* Global keyframes via inline style */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
-  );
+  )
 }
