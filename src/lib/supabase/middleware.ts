@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/dashboard")
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
