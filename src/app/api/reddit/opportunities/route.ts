@@ -120,14 +120,20 @@ export async function GET(request: NextRequest) {
     for (const subreddit of SUBREDDITS) {
       try {
         const posts = await fetchSubredditPosts(subreddit, 100);
-        
+        console.log(`[${subreddit}] Fetched ${posts.length} posts`);
+
+        let relevantCount = 0;
+        let scoredCount = 0;
+
         for (const post of posts) {
           if (post.created_utc < cutoffTime) continue;
           if (!isRelevant(post.title + ' ' + (post.selftext || ''))) continue;
 
+          relevantCount++;
           const score = calculateRelevance(post.title, post.selftext);
           if (score < 15) continue;
 
+          scoredCount++;
           opportunities.push({
             date: new Date(post.created_utc * 1000).toISOString(),
             subreddit: post.subreddit,
@@ -140,13 +146,18 @@ export async function GET(request: NextRequest) {
           });
         }
 
+        console.log(`[${subreddit}] ${relevantCount} passed relevance check`);
+        console.log(`[${subreddit}] ${scoredCount} scored >= 15`);
+
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
       } catch (err) {
         console.error(`Error fetching r/${subreddit}:`, err);
       }
     }
+
+    console.log(`Final opportunities: ${opportunities.length}`);
 
     // Sort by confidence
     opportunities.sort((a, b) => b.confidence - a.confidence);
