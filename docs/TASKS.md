@@ -23,7 +23,7 @@
 | 12 | Loading states and error boundaries | DONE | M | #6 | ErrorBoundary, ErrorAlert, loading skeletons |
 | 13 | Bulk actions (hide/delete multiple) | DONE | M | #6 | Select all, bulk hide/replied/delete with confirmation |
 | 14 | Scan history page | DONE | M | None | History page, scan_id FK, nav bar |
-| 15 | Add `updated_at` to all tables | TODO | S | DB migration | For data hygiene |
+| 15 | Add `updated_at` to all tables | DONE | S | DB migration | Migration 007, auto-update triggers |
 
 ## P2 — Nice to Have / Later
 
