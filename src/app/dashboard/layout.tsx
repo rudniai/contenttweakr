@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard/reddit-finder', label: 'Scanner' },
   { href: '/dashboard/history', label: 'Scan History' },
+  { href: '/dashboard/settings', label: 'Settings' },
 ];
 
 export default function DashboardLayout({

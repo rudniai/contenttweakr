@@ -8,7 +8,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { SUBREDDITS, KEYWORDS, QUESTION_PATTERNS, isRelevant, calculateRelevance } from '../src/lib/reddit/config';
+import { SUBREDDITS as DEFAULT_SUBREDDITS, KEYWORDS as DEFAULT_KEYWORDS, QUESTION_PATTERNS, calculateRelevance } from '../src/lib/reddit/config';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -107,6 +107,32 @@ async function fetchSubredditPosts(subreddit: string, limit = 100): Promise<Redd
   return [];
 }
 
+// ── User settings ────────────────────────────────────────────────────────────
+async function getUserSettings(userId: string): Promise<{ subreddits: string[]; keywords: string[] }> {
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('subreddits, keywords')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) {
+    return { subreddits: DEFAULT_SUBREDDITS, keywords: DEFAULT_KEYWORDS };
+  }
+
+  return {
+    subreddits: data.subreddits ?? DEFAULT_SUBREDDITS,
+    keywords: data.keywords ?? DEFAULT_KEYWORDS,
+  };
+}
+
+function isRelevantWithKeywords(text: string, keywords: string[]): boolean {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+  const hasKeyword = keywords.some((kw) => lowerText.includes(kw.toLowerCase()));
+  const hasQuestionPattern = QUESTION_PATTERNS.some((pattern) => pattern.test(text));
+  return hasKeyword || hasQuestionPattern;
+}
+
 // ── Scan execution ──────────────────────────────────────────────────────────
 async function executeScan(scanRequest: { id: string; user_id: string; hours: number }) {
   const { id, user_id, hours } = scanRequest;
@@ -116,13 +142,17 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
   await supabase.from('scan_requests').update({ status: 'processing' }).eq('id', id);
 
   try {
+    // Load user-specific settings
+    const settings = await getUserSettings(user_id);
+    console.log(`  Using ${settings.subreddits.length} subreddits, ${settings.keywords.length} keywords`);
+
     const opportunities: Opportunity[] = [];
     const now = Date.now() / 1000;
     const cutoffTime = now - hours * 3600;
     const succeeded: string[] = [];
     const failed: string[] = [];
 
-    for (const sub of SUBREDDITS) {
+    for (const sub of settings.subreddits) {
       const posts = await fetchSubredditPosts(sub, 100);
 
       if (posts.length === 0) {
@@ -135,7 +165,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
 
       for (const post of posts) {
         if (post.created_utc < cutoffTime) continue;
-        if (!isRelevant(post.title + ' ' + (post.selftext || ''))) continue;
+        if (!isRelevantWithKeywords(post.title + ' ' + (post.selftext || ''), settings.keywords)) continue;
 
         const score = calculateRelevance(post.title, post.selftext);
         if (score < 10) continue;
@@ -155,7 +185,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
       await randomDelay(3000, 6000);
     }
 
-    console.log(`  Succeeded: ${succeeded.length}/${SUBREDDITS.length} | Failed: ${failed.length}`);
+    console.log(`  Succeeded: ${succeeded.length}/${settings.subreddits.length} | Failed: ${failed.length}`);
 
     // Sort by confidence and take top 20
     opportunities.sort((a, b) => b.confidence - a.confidence);
