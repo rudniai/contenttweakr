@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Opportunity } from './types';
 
@@ -55,6 +56,27 @@ export default function OpportunityCard({
   onCopyToClipboard,
   onHide,
 }: OpportunityCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState('');
+
+  const handleEdit = () => {
+    setEditedText(opp.aiResponse || '');
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditedText('');
+    setIsEditing(false);
+  };
+
+  // Use edited text if available, otherwise original
+  const displayText = editedText || opp.aiResponse || '';
+  const isEdited = editedText !== '' && editedText !== opp.aiResponse;
+
   return (
     <div
       className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''}`}
@@ -125,26 +147,77 @@ export default function OpportunityCard({
         {opp.aiResponse ? (
           <>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-emerald-400">
-                Generated Response
-              </span>
-              <Button
-                onClick={() => onCopyToClipboard(opp.aiResponse!, idx)}
-                aria-label="Copy response to clipboard"
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  copiedIdx === idx
-                    ? 'bg-emerald-700 text-emerald-100'
-                    : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                }`}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-emerald-400">
+                  Generated Response
+                </span>
+                {isEdited && !isEditing && (
+                  <span className="text-xs text-amber-400/70">(edited)</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <>
+                    <Button
+                      onClick={handleSave}
+                      className="text-xs px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-600 text-emerald-100 transition-colors"
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      onClick={handleCancel}
+                      className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleEdit}
+                      className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => onCopyToClipboard(displayText, idx)}
+                      aria-label="Copy response to clipboard"
+                      className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                        copiedIdx === idx
+                          ? 'bg-emerald-700 text-emerald-100'
+                          : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                      }`}
+                    >
+                      {copiedIdx === idx ? 'Copied!' : 'Copy'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            {isEditing ? (
+              <textarea
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                className="w-full bg-emerald-950/30 border border-emerald-600/50 rounded-lg p-4 text-sm text-emerald-200 leading-relaxed resize-y min-h-[120px] focus:outline-none focus:border-emerald-500/70 transition-colors"
+                rows={6}
+              />
+            ) : (
+              <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-4">
+                <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap">
+                  {displayText}
+                </p>
+              </div>
+            )}
+            {isEdited && !isEditing && (
+              <button
+                onClick={() => {
+                  setEditedText('');
+                }}
+                className="mt-2 text-xs text-slate-500 hover:text-slate-400 transition-colors"
               >
-                {copiedIdx === idx ? 'Copied!' : 'Copy'}
-              </Button>
-            </div>
-            <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-4">
-              <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap">
-                {opp.aiResponse}
-              </p>
-            </div>
+                Restore original
+              </button>
+            )}
           </>
         ) : isGenerating ? (
           <div className="space-y-3 animate-pulse">
