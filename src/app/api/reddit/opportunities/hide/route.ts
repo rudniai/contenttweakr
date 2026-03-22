@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { hideOpportunitySchema } from '@/lib/validations/opportunities';
 
 export async function POST(request: Request) {
   try {
@@ -10,11 +11,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { opportunityId, hidden } = await request.json();
+    const body = await request.json();
+    const parsed = hideOpportunitySchema.safeParse(body);
 
-    if (!opportunityId || typeof hidden !== 'boolean') {
-      return NextResponse.json({ error: 'opportunityId and hidden (boolean) are required' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { opportunityId, hidden } = parsed.data;
 
     const { error } = await supabase
       .from('opportunities')

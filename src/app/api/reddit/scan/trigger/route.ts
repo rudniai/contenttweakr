@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { scanTriggerSchema } from '@/lib/validations/scan';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const hours = body.hours || 24;
+    const parsed = scanTriggerSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const { hours } = parsed.data;
 
     // Create scan request in DB
     const { data, error } = await supabase

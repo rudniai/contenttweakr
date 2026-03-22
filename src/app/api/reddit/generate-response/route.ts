@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { generateResponseSchema } from "@/lib/validations/responses";
 
 // --- Types ---
-
-interface GenerateRequest {
-  title: string;
-  context: string;
-  subreddit: string;
-  opportunityUrl?: string;
-}
 
 interface GenerateResponse {
   success: boolean;
@@ -85,7 +79,7 @@ export async function POST(
     }
 
     // 2. Parse and validate input
-    let body: GenerateRequest;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
@@ -95,17 +89,19 @@ export async function POST(
       );
     }
 
-    const { title, context, subreddit, opportunityUrl } = body;
+    const parsed = generateResponseSchema.safeParse(body);
 
-    if (!title || !subreddit) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "title and subreddit are required" },
+        { success: false, error: "Validation failed", details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
+    const { title, context, subreddit, opportunityUrl } = parsed.data;
+
     // 3. Generate response via AI
-    const text = await generateResponse(title, context || "", subreddit);
+    const text = await generateResponse(title, context, subreddit);
 
     // 4. Save response to DB if we can find the opportunity
     if (opportunityUrl) {

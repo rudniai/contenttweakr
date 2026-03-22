@@ -8,7 +8,7 @@
 | 2 | Remove unused `openai` dependency | DONE | S | None | |
 | 3 | Extract constants (subreddits, keywords) into shared config | DONE | S | None | `src/lib/reddit/config.ts` |
 | 4 | Delete legacy files (`supabase-schema.sql`, `cleanup-plan.md`, `poll-and-scan.sh`) | DONE | S | None | Deleted |
-| 5 | Add input validation to API routes | TODO | M | None | Sanitize user inputs |
+| 5 | Add input validation to API routes | DONE | M | None | Zod schemas in `src/lib/validations/` |
 | 6 | Break up `reddit-finder/page.tsx` into components | TODO | L | None | ~800 line monolith |
 
 ## P1 — Important / Do Next
