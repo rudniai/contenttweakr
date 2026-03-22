@@ -38,7 +38,7 @@
 | 22 | Multi-user / multi-tenant | TODO | XL | Auth overhaul | Billing, roles, quotas |
 | 23 | Direct Reddit posting (OAuth) | TODO | XL | Reddit app registration | Complex OAuth flow |
 | 24 | Test coverage (unit + integration) | TODO | L | None | Start with API routes |
-| 25 | Rate limiting on API routes | TODO | M | None | Per-user throttling |
+| 25 | Rate limiting on API routes | DONE | M | None | In-memory sliding window, per-user throttling |
 
 ## Already Complete
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateResponseSchema } from "@/lib/validations/responses";
+import { applyRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
 
 // --- Types ---
 
@@ -62,7 +63,7 @@ Guidelines:
 
 export async function POST(
   request: NextRequest
-): Promise<NextResponse<GenerateResponse>> {
+): Promise<NextResponse<GenerateResponse> | NextResponse> {
   try {
     // 1. Auth check
     const supabase = await createClient();
@@ -77,6 +78,9 @@ export async function POST(
         { status: 401 }
       );
     }
+
+    const rateLimited = applyRateLimit(user.id, 'generate-response', RATE_LIMITS.generateResponse);
+    if (rateLimited) return rateLimited;
 
     // 2. Parse and validate input
     let body: unknown;
