@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Opportunity, ScanStatus } from './components/types';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ScanControls from './components/ScanControls';
@@ -15,6 +16,8 @@ interface AppError {
 }
 
 export default function RedditFinderPage() {
+  const searchParams = useSearchParams();
+  const scanIdFilter = searchParams.get('scan_id');
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(true);
@@ -105,7 +108,10 @@ export default function RedditFinderPage() {
   useEffect(() => {
     async function loadSaved() {
       try {
-        const res = await fetch('/api/reddit/opportunities/saved');
+        const url = scanIdFilter
+          ? `/api/reddit/opportunities/saved?scan_id=${scanIdFilter}&includeHidden=true`
+          : '/api/reddit/opportunities/saved';
+        const res = await fetch(url);
         const data = await res.json();
         if (res.ok && data.opportunities?.length > 0) {
           setOpportunities(data.opportunities);
@@ -118,7 +124,7 @@ export default function RedditFinderPage() {
       }
     }
     loadSaved();
-  }, []);
+  }, [scanIdFilter]);
 
   const findOpportunities = async () => {
     setLoading(true);
@@ -398,6 +404,20 @@ export default function RedditFinderPage() {
             Find relevant Reddit posts where FreeSiteAudit can genuinely help
           </p>
         </div>
+
+        {scanIdFilter && (
+          <div className="mb-4 bg-blue-900/20 border border-blue-700/30 rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-blue-300 text-sm">
+              Showing results from a specific scan
+            </span>
+            <a
+              href="/dashboard/reddit-finder"
+              className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+            >
+              Show all →
+            </a>
+          </div>
+        )}
 
         <ErrorBoundary section="Scan Controls">
           <ScanControls

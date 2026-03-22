@@ -13,6 +13,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const includeHidden = searchParams.get('includeHidden') === 'true';
+    const scanId = searchParams.get('scan_id');
 
     // Fetch opportunities with their latest response
     let query = supabase
@@ -38,6 +39,10 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .order('scanned_at', { ascending: false })
       .limit(50);
+
+    if (scanId) {
+      query = query.eq('scan_id', scanId);
+    }
 
     if (!includeHidden) {
       query = query.or('hidden.is.null,hidden.eq.false');

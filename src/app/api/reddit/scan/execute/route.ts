@@ -193,6 +193,7 @@ export async function POST(request: NextRequest) {
         upvotes: opp.upvotes,
         comments: opp.comments,
         scanned_at: new Date().toISOString(),
+        scan_id: scan_request_id,
       }));
 
       const { error: upsertError } = await supabase

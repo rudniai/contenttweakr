@@ -173,6 +173,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         upvotes: opp.upvotes,
         comments: opp.comments,
         scanned_at: new Date().toISOString(),
+        scan_id: id,
       }));
 
       const { error: upsertError } = await supabase
