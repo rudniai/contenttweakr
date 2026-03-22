@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Opportunity, ScanStatus } from './components/types';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -16,6 +16,29 @@ interface AppError {
 }
 
 export default function RedditFinderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <div className="h-10 w-64 bg-slate-800 rounded animate-pulse mb-2" />
+            <div className="h-5 w-96 bg-slate-800/60 rounded animate-pulse" />
+          </div>
+          <div className="h-32 bg-slate-800/40 rounded-xl animate-pulse mb-4" />
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-slate-800/30 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <RedditFinderContent />
+    </Suspense>
+  );
+}
+
+function RedditFinderContent() {
   const searchParams = useSearchParams();
   const scanIdFilter = searchParams.get('scan_id');
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
