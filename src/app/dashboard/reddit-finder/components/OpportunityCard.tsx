@@ -46,6 +46,8 @@ export interface OpportunityCardProps {
   onHide: (opp: Opportunity) => void;
   onMarkReplied: (opp: Opportunity) => void;
   isMarkingReplied: boolean;
+  isSelected?: boolean;
+  onSelect?: (opp: Opportunity) => void;
 }
 
 export default function OpportunityCard({
@@ -59,6 +61,8 @@ export default function OpportunityCard({
   onHide,
   onMarkReplied,
   isMarkingReplied,
+  isSelected = false,
+  onSelect,
 }: OpportunityCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
@@ -83,7 +87,7 @@ export default function OpportunityCard({
 
   return (
     <div
-      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''} ${opp.repliedAt ? 'opacity-60' : ''}`}
+      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border ${isSelected ? 'border-blue-500/70 ring-1 ring-blue-500/30' : 'border-slate-700/50'} p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''} ${opp.repliedAt ? 'opacity-60' : ''}`}
     >
       {/* Hide button */}
       {opp.id && (
@@ -108,6 +112,15 @@ export default function OpportunityCard({
 
       {/* Badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3 pr-8">
+        {onSelect && opp.id && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelect(opp)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500/50 focus:ring-offset-0 cursor-pointer shrink-0"
+            aria-label={`Select ${opp.title}`}
+          />
+        )}
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700/30">
           r/{opp.subreddit}
         </span>

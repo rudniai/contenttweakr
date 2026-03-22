@@ -40,6 +40,8 @@ export interface OpportunityListProps {
   onMarkReplied: (opp: Opportunity) => void;
   markingRepliedIds: Set<string>;
   onSetShowHidden: (show: boolean) => void;
+  selectedIds?: Set<string>;
+  onSelect?: (opp: Opportunity) => void;
 }
 
 export default function OpportunityList({
@@ -60,6 +62,8 @@ export default function OpportunityList({
   onMarkReplied,
   markingRepliedIds,
   onSetShowHidden,
+  selectedIds,
+  onSelect,
 }: OpportunityListProps) {
   // Loading saved state
   if (loadingSaved) {
@@ -148,6 +152,8 @@ export default function OpportunityList({
             onHide={onHide}
             onMarkReplied={onMarkReplied}
             isMarkingReplied={!!opp.id && markingRepliedIds.has(opp.id)}
+            isSelected={!!opp.id && !!selectedIds?.has(opp.id)}
+            onSelect={onSelect}
           />
         ))}
       </div>

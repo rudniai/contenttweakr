@@ -7,6 +7,7 @@ import ScanControls from './components/ScanControls';
 import Filters from './components/Filters';
 import OpportunityList from './components/OpportunityList';
 import ErrorAlert, { type ErrorType } from './components/ErrorAlert';
+import BulkActionBar from './components/BulkActionBar';
 
 interface AppError {
   message: string;
@@ -26,6 +27,8 @@ export default function RedditFinderPage() {
   const [hidingIds, setHidingIds] = useState<Set<string>>(new Set());
   const [hideReplied, setHideReplied] = useState(false);
   const [markingRepliedIds, setMarkingRepliedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkActioning, setIsBulkActioning] = useState(false);
 
   const setTypedError = useCallback((message: string, type: ErrorType) => {
     setError({ message, type });
@@ -265,6 +268,108 @@ export default function RedditFinderPage() {
     }
   };
 
+  const toggleSelect = useCallback((opp: Opportunity) => {
+    if (!opp.id) return;
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(opp.id!)) {
+        next.delete(opp.id!);
+      } else {
+        next.add(opp.id!);
+      }
+      return next;
+    });
+  }, []);
+
+  const bulkHide = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setIsBulkActioning(true);
+
+    // Optimistic update
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, hidden: true } : o))
+    );
+
+    try {
+      const res = await fetch('/api/reddit/opportunities/bulk-hide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityIds: ids, hidden: true }),
+      });
+      if (!res.ok) {
+        // Revert
+        setOpportunities((prev) =>
+          prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, hidden: false } : o))
+        );
+      }
+    } catch {
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, hidden: false } : o))
+      );
+    } finally {
+      setSelectedIds(new Set());
+      setIsBulkActioning(false);
+    }
+  };
+
+  const bulkMarkReplied = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setIsBulkActioning(true);
+
+    const now = new Date().toISOString();
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, repliedAt: now } : o))
+    );
+
+    try {
+      const res = await fetch('/api/reddit/opportunities/bulk-replied', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityIds: ids }),
+      });
+      if (!res.ok) {
+        setOpportunities((prev) =>
+          prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, repliedAt: null } : o))
+        );
+      }
+    } catch {
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id && selectedIds.has(o.id) ? { ...o, repliedAt: null } : o))
+      );
+    } finally {
+      setSelectedIds(new Set());
+      setIsBulkActioning(false);
+    }
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setIsBulkActioning(true);
+
+    // Store for revert
+    const removedOpps = opportunities.filter((o) => o.id && selectedIds.has(o.id));
+    setOpportunities((prev) => prev.filter((o) => !o.id || !selectedIds.has(o.id)));
+
+    try {
+      const res = await fetch('/api/reddit/opportunities/bulk-delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityIds: ids }),
+      });
+      if (!res.ok) {
+        setOpportunities((prev) => [...prev, ...removedOpps]);
+      }
+    } catch {
+      setOpportunities((prev) => [...prev, ...removedOpps]);
+    } finally {
+      setSelectedIds(new Set());
+      setIsBulkActioning(false);
+    }
+  };
+
   const visibleOpportunities = opportunities.filter((o) => {
     if (!showHidden && o.hidden) return false;
     if (hideReplied && o.repliedAt) return false;
@@ -273,6 +378,13 @@ export default function RedditFinderPage() {
 
   const hiddenCount = opportunities.filter((o) => o.hidden).length;
   const repliedCount = opportunities.filter((o) => o.repliedAt).length;
+
+  // IDs of visible opportunities that can be selected (must have id)
+  const selectableIds = visibleOpportunities.filter((o) => o.id).map((o) => o.id!);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
+  const selectAll = () => setSelectedIds(new Set(selectableIds));
+  const deselectAll = () => setSelectedIds(new Set());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-8">
@@ -307,15 +419,28 @@ export default function RedditFinderPage() {
         )}
 
         {!loading && visibleOpportunities.length > 0 && (
-          <Filters
-            visibleCount={visibleOpportunities.length}
-            hiddenCount={hiddenCount}
-            repliedCount={repliedCount}
-            showHidden={showHidden}
-            hideReplied={hideReplied}
-            onSetShowHidden={setShowHidden}
-            onSetHideReplied={setHideReplied}
-          />
+          <>
+            <Filters
+              visibleCount={visibleOpportunities.length}
+              hiddenCount={hiddenCount}
+              repliedCount={repliedCount}
+              showHidden={showHidden}
+              hideReplied={hideReplied}
+              onSetShowHidden={setShowHidden}
+              onSetHideReplied={setHideReplied}
+            />
+            <BulkActionBar
+              selectedCount={selectedIds.size}
+              totalCount={selectableIds.length}
+              allSelected={allSelected}
+              onSelectAll={selectAll}
+              onDeselectAll={deselectAll}
+              onBulkHide={bulkHide}
+              onBulkMarkReplied={bulkMarkReplied}
+              onBulkDelete={bulkDelete}
+              isBulkActioning={isBulkActioning}
+            />
+          </>
         )}
 
         <ErrorBoundary section="Opportunity List">
@@ -337,6 +462,8 @@ export default function RedditFinderPage() {
             onMarkReplied={markReplied}
             markingRepliedIds={markingRepliedIds}
             onSetShowHidden={setShowHidden}
+            selectedIds={selectedIds}
+            onSelect={toggleSelect}
           />
         </ErrorBoundary>
       </div>
