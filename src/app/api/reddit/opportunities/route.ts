@@ -10,7 +10,10 @@ const SUBREDDITS = [
 const KEYWORDS = [
   'website audit', 'seo check', 'site speed', 'ranking', 'free seo',
   'website health', 'pagespeed', 'lighthouse', 'gtmetrix', 'site performance',
-  'core web vitals', 'mobile friendly', 'seo tools', 'website analyzer'
+  'core web vitals', 'mobile friendly', 'seo tools', 'website analyzer',
+  'website', 'site', 'my website', 'my site',
+  'feedback', 'review my', 'help with', 'advice',
+  'optimize', 'improve', 'slow', 'broken'
 ];
 
 const QUESTION_PATTERNS = [
@@ -19,7 +22,11 @@ const QUESTION_PATTERNS = [
   /need recommendations? for/i,
   /is there a (free|good)/i,
   /anyone know a (good|free)/i,
-  /looking for (a|an) (free|good|cheap)/i
+  /looking for (a|an) (free|good|cheap)/i,
+  /can someone (review|check|look at)/i,
+  /feedback on my/i,
+  /thoughts on/i,
+  /how to (improve|optimize|fix)/i
 ];
 
 interface RedditPost {
@@ -119,7 +126,7 @@ export async function GET(request: NextRequest) {
           if (!isRelevant(post.title + ' ' + (post.selftext || ''))) continue;
 
           const score = calculateRelevance(post.title, post.selftext);
-          if (score < 20) continue;
+          if (score < 15) continue;
 
           opportunities.push({
             date: new Date(post.created_utc * 1000).toISOString(),
