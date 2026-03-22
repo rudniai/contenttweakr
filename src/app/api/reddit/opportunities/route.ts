@@ -84,18 +84,27 @@ function isRelevant(text: string): boolean {
 function calculateRelevance(title: string, selftext: string): number {
   let score = 0;
   const text = `${title} ${selftext || ''}`.toLowerCase();
-  
+
   const highValueKeywords = ['website audit', 'seo check', 'free seo tool', 'site speed'];
   highValueKeywords.forEach(kw => {
     if (text.includes(kw)) score += 25;
   });
-  
-  if (QUESTION_PATTERNS.some(p => p.test(text))) score += 20;
-  
+
+  if (QUESTION_PATTERNS.some(p => p.test(text))) score += 15;
+
+  const broadKeywords = ['website', 'site', 'my website', 'my site'];
+  const specializedKeywords = ['feedback', 'review my', 'help with', 'advice', 'optimize', 'improve', 'slow', 'broken'];
+
   KEYWORDS.forEach(kw => {
-    if (text.includes(kw.toLowerCase())) score += 5;
+    if (text.includes(kw.toLowerCase())) {
+      if (broadKeywords.includes(kw)) {
+        score += 10;
+      } else if (!highValueKeywords.includes(kw)) {
+        score += 5;
+      }
+    }
   });
-  
+
   return Math.min(100, score);
 }
 
@@ -131,7 +140,7 @@ export async function GET(request: NextRequest) {
 
           relevantCount++;
           const score = calculateRelevance(post.title, post.selftext);
-          if (score < 15) continue;
+          if (score < 10) continue;
 
           scoredCount++;
           opportunities.push({
@@ -147,7 +156,7 @@ export async function GET(request: NextRequest) {
         }
 
         console.log(`[${subreddit}] ${relevantCount} passed relevance check`);
-        console.log(`[${subreddit}] ${scoredCount} scored >= 15`);
+        console.log(`[${subreddit}] ${scoredCount} scored >= 10`);
 
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 2000));
