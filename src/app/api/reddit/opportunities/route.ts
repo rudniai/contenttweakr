@@ -53,22 +53,54 @@ interface Opportunity {
   aiResponse?: string;
 }
 
+const USER_AGENT = 'Mozilla/5.0 (compatible; ContentTweakr/1.0; +https://contenttweakr.com)';
+const MAX_RETRIES = 3;
+
+function randomDelay(minMs: number, maxMs: number): Promise<void> {
+  const delay = minMs + Math.random() * (maxMs - minMs);
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
 async function fetchSubredditPosts(subreddit: string, limit = 100): Promise<RedditPost[]> {
   const url = `https://www.reddit.com/r/${subreddit}/new.json?limit=${limit}`;
-  
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'ContentTweakr:RedditFinder:v1.0 (research tool)'
-    }
-  });
 
-  if (!response.ok) {
-    console.error(`Reddit API error for r/${subreddit}: ${response.status}`);
-    return [];
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        }
+      });
+
+      if (response.status === 403) {
+        console.warn(`r/${subreddit}: 403 on attempt ${attempt}/${MAX_RETRIES}`);
+        if (attempt < MAX_RETRIES) {
+          await randomDelay(2000 * attempt, 4000 * attempt);
+          continue;
+        }
+        console.error(`r/${subreddit}: 403 after ${MAX_RETRIES} attempts, skipping`);
+        return [];
+      }
+
+      if (!response.ok) {
+        console.error(`Reddit API error for r/${subreddit}: ${response.status}`);
+        return [];
+      }
+
+      const data = await response.json();
+      return data.data.children.map((child: { data: RedditPost }) => child.data);
+    } catch (err) {
+      console.error(`r/${subreddit}: fetch error on attempt ${attempt}/${MAX_RETRIES}:`, err);
+      if (attempt < MAX_RETRIES) {
+        await randomDelay(2000 * attempt, 4000 * attempt);
+        continue;
+      }
+    }
   }
 
-  const data = await response.json();
-  return data.data.children.map((child: { data: RedditPost }) => child.data);
+  return [];
 }
 
 function isRelevant(text: string): boolean {
@@ -126,10 +158,20 @@ export async function GET(request: NextRequest) {
     const cutoffTime = now - (hours * 3600);
 
     // Scan subreddits
+    const succeeded: string[] = [];
+    const failed: string[] = [];
+
     for (const subreddit of SUBREDDITS) {
       try {
         const posts = await fetchSubredditPosts(subreddit, 100);
-        console.log(`[${subreddit}] Fetched ${posts.length} posts`);
+
+        if (posts.length === 0) {
+          failed.push(subreddit);
+          console.log(`[${subreddit}] No posts returned (likely blocked)`);
+        } else {
+          succeeded.push(subreddit);
+          console.log(`[${subreddit}] Fetched ${posts.length} posts`);
+        }
 
         let relevantCount = 0;
         let scoredCount = 0;
@@ -158,13 +200,17 @@ export async function GET(request: NextRequest) {
         console.log(`[${subreddit}] ${relevantCount} passed relevance check`);
         console.log(`[${subreddit}] ${scoredCount} scored >= 10`);
 
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Rate limiting with random jitter (3-5 seconds)
+        await randomDelay(3000, 5000);
 
       } catch (err) {
+        failed.push(subreddit);
         console.error(`Error fetching r/${subreddit}:`, err);
       }
     }
+
+    console.log(`Subreddits succeeded: ${succeeded.join(', ')} (${succeeded.length}/${SUBREDDITS.length})`);
+    console.log(`Subreddits failed: ${failed.length > 0 ? failed.join(', ') : 'none'}`);
 
     console.log(`Final opportunities: ${opportunities.length}`);
 
@@ -201,6 +247,8 @@ export async function GET(request: NextRequest) {
       count: top20.length,
       opportunities: top20,
       scannedSubreddits: SUBREDDITS.length,
+      succeededSubreddits: succeeded.length,
+      failedSubreddits: failed,
       timeRange: `${hours} hours`
     });
 
