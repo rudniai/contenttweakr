@@ -146,20 +146,25 @@ export default function OpportunityCard({
               </p>
             </div>
           </>
+        ) : isGenerating ? (
+          <div className="space-y-3 animate-pulse">
+            <div className="flex items-center gap-2 mb-2">
+              <Spinner className="h-4 w-4" />
+              <span className="text-sm text-blue-300 font-medium">Generating response...</span>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/30">
+              <div className="h-3 w-full bg-slate-700/50 rounded mb-2" />
+              <div className="h-3 w-5/6 bg-slate-700/50 rounded mb-2" />
+              <div className="h-3 w-4/6 bg-slate-700/50 rounded mb-2" />
+              <div className="h-3 w-3/4 bg-slate-700/50 rounded" />
+            </div>
+          </div>
         ) : (
           <Button
             onClick={() => onGenerateResponse(idx)}
-            disabled={isGenerating}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg disabled:opacity-50 transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
           >
-            {isGenerating ? (
-              <span className="flex items-center justify-center gap-2">
-                <Spinner className="h-4 w-4" />
-                Generating Response...
-              </span>
-            ) : (
-              'Generate Response'
-            )}
+            Generate Response
           </Button>
         )}
       </div>

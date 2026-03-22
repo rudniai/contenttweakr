@@ -60,8 +60,12 @@ export default function OpportunityList({
   // Loading saved state
   if (loadingSaved) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-4">
+        <div className="mb-4 text-sm font-medium text-slate-500">
+          Loading saved opportunities...
+        </div>
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }

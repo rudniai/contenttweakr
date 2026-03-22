@@ -20,7 +20,7 @@
 | 9 | Reply tracking (mark opportunity as "responded") | TODO | M | DB migration | New column or table |
 | 10 | User-configurable subreddit list | TODO | M | DB migration | Settings page needed |
 | 11 | User-configurable keyword list | TODO | M | DB migration, #10 | Part of settings |
-| 12 | Loading states and error boundaries | TODO | M | #6 | After component extraction |
+| 12 | Loading states and error boundaries | DONE | M | #6 | ErrorBoundary, ErrorAlert, loading skeletons |
 | 13 | Bulk actions (hide/delete multiple) | TODO | M | #6 | UI + API changes |
 | 14 | Scan history page | TODO | M | None | List past scans with results |
 | 15 | Add `updated_at` to all tables | TODO | S | DB migration | For data hygiene |

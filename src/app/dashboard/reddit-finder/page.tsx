@@ -2,21 +2,38 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Opportunity, ScanStatus } from './components/types';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import ScanControls from './components/ScanControls';
 import Filters from './components/Filters';
 import OpportunityList from './components/OpportunityList';
+import ErrorAlert, { type ErrorType } from './components/ErrorAlert';
+
+interface AppError {
+  message: string;
+  type: ErrorType;
+}
 
 export default function RedditFinderPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
   const [selectedHours, setSelectedHours] = useState(24);
   const [generatingIdx, setGeneratingIdx] = useState<Set<number>>(new Set());
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
   const [hidingIds, setHidingIds] = useState<Set<string>>(new Set());
+
+  const setTypedError = useCallback((message: string, type: ErrorType) => {
+    setError({ message, type });
+  }, []);
+
+  const classifyError = useCallback((err: unknown): ErrorType => {
+    if (err instanceof TypeError && err.message === 'Failed to fetch') return 'network';
+    if (err instanceof DOMException && err.name === 'AbortError') return 'network';
+    return 'generic';
+  }, []);
 
   // Scan request state
   const [scanRequestId, setScanRequestId] = useState<string | null>(null);
@@ -64,7 +81,7 @@ export default function RedditFinderPage() {
         } else if (data.status === 'failed') {
           stopPolling();
           setLoading(false);
-          setError(data.error || 'Scan failed');
+          setTypedError(data.error || 'Scan failed', 'scan');
           setScanRequestId(null);
         }
       } catch (err) {
@@ -118,8 +135,8 @@ export default function RedditFinderPage() {
       setScanRequestId(data.id);
       setScanStatus({ id: data.id, status: 'pending', hours: selectedHours, result_count: null, error: null, created_at: new Date().toISOString(), completed_at: null });
     } catch (err) {
-      const error = err as Error;
-      setError(error.message);
+      const type = classifyError(err);
+      setTypedError((err as Error).message || 'Failed to start scan', type === 'network' ? 'network' : 'scan');
       setLoading(false);
     }
   };
@@ -151,8 +168,8 @@ export default function RedditFinderPage() {
         )
       );
     } catch (err) {
-      const error = err as Error;
-      setError(error.message);
+      const type = classifyError(err);
+      setTypedError((err as Error).message || 'Failed to generate response', type === 'network' ? 'network' : 'generation');
     } finally {
       setGeneratingIdx((prev) => {
         const next = new Set(prev);
@@ -168,7 +185,7 @@ export default function RedditFinderPage() {
       setCopiedIdx(idx);
       setTimeout(() => setCopiedIdx(null), 2000);
     } catch {
-      setError('Failed to copy to clipboard');
+      setTypedError('Failed to copy to clipboard', 'generic');
     }
   };
 
@@ -228,23 +245,23 @@ export default function RedditFinderPage() {
           </p>
         </div>
 
-        <ScanControls
-          selectedHours={selectedHours}
-          onSelectedHoursChange={setSelectedHours}
-          loading={loading}
-          scanStatus={scanStatus}
-          onFindOpportunities={findOpportunities}
-        />
+        <ErrorBoundary section="Scan Controls">
+          <ScanControls
+            selectedHours={selectedHours}
+            onSelectedHoursChange={setSelectedHours}
+            loading={loading}
+            scanStatus={scanStatus}
+            onFindOpportunities={findOpportunities}
+          />
+        </ErrorBoundary>
 
-        {/* Error */}
         {error && (
-          <div className="bg-red-900/30 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
-            <span className="text-lg">&#x26A0;</span>
-            <div>
-              <p className="font-medium">Scan Error</p>
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          </div>
+          <ErrorAlert
+            message={error.message}
+            type={error.type}
+            onDismiss={() => setError(null)}
+            onRetry={error.type === 'scan' ? findOpportunities : undefined}
+          />
         )}
 
         {!loading && visibleOpportunities.length > 0 && (
@@ -256,23 +273,25 @@ export default function RedditFinderPage() {
           />
         )}
 
-        <OpportunityList
-          opportunities={visibleOpportunities}
-          loading={loading}
-          loadingSaved={loadingSaved}
-          hasScanned={hasScanned}
-          selectedHours={selectedHours}
-          hiddenCount={hiddenCount}
-          showHidden={showHidden}
-          generatingIdx={generatingIdx}
-          hidingIds={hidingIds}
-          copiedIdx={copiedIdx}
-          error={error}
-          onGenerateResponse={generateResponse}
-          onCopyToClipboard={copyToClipboard}
-          onHide={hideOpportunity}
-          onSetShowHidden={setShowHidden}
-        />
+        <ErrorBoundary section="Opportunity List">
+          <OpportunityList
+            opportunities={visibleOpportunities}
+            loading={loading}
+            loadingSaved={loadingSaved}
+            hasScanned={hasScanned}
+            selectedHours={selectedHours}
+            hiddenCount={hiddenCount}
+            showHidden={showHidden}
+            generatingIdx={generatingIdx}
+            hidingIds={hidingIds}
+            copiedIdx={copiedIdx}
+            error={error?.message ?? null}
+            onGenerateResponse={generateResponse}
+            onCopyToClipboard={copyToClipboard}
+            onHide={hideOpportunity}
+            onSetShowHidden={setShowHidden}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );
