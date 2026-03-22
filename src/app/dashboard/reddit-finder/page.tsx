@@ -13,6 +13,7 @@ interface Opportunity {
   confidence: number;
   upvotes: number;
   comments: number;
+  hidden?: boolean;
   aiResponse?: string;
 }
 
@@ -129,6 +130,8 @@ export default function RedditFinderPage() {
   const [generatingIdx, setGeneratingIdx] = useState<Set<number>>(new Set());
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
+  const [hidingIds, setHidingIds] = useState<Set<string>>(new Set());
 
   // Scan request state
   const [scanRequestId, setScanRequestId] = useState<string | null>(null);
@@ -280,6 +283,49 @@ export default function RedditFinderPage() {
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
+  const hideOpportunity = async (opp: Opportunity) => {
+    if (!opp.id) return;
+    const newHidden = !opp.hidden;
+
+    // Optimistic update
+    setHidingIds((prev) => new Set(prev).add(opp.id!));
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id === opp.id ? { ...o, hidden: newHidden } : o))
+    );
+
+    try {
+      const res = await fetch('/api/reddit/opportunities/hide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityId: opp.id, hidden: newHidden }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        setOpportunities((prev) =>
+          prev.map((o) => (o.id === opp.id ? { ...o, hidden: !newHidden } : o))
+        );
+      }
+    } catch {
+      // Revert on failure
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id === opp.id ? { ...o, hidden: !newHidden } : o))
+      );
+    } finally {
+      setHidingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(opp.id!);
+        return next;
+      });
+    }
+  };
+
+  const visibleOpportunities = showHidden
+    ? opportunities
+    : opportunities.filter((o) => !o.hidden);
+
+  const hiddenCount = opportunities.filter((o) => o.hidden).length;
+
   const isScanning = loading && scanStatus !== null;
 
   return (
@@ -390,7 +436,7 @@ export default function RedditFinderPage() {
         {!loadingSaved &&
           !loading &&
           !hasScanned &&
-          opportunities.length === 0 &&
+          visibleOpportunities.length === 0 &&
           !error && (
             <div className="text-center py-16">
               <div className="text-5xl mb-4">🔍</div>
@@ -408,37 +454,78 @@ export default function RedditFinderPage() {
         {!loadingSaved &&
           !loading &&
           hasScanned &&
-          opportunities.length === 0 &&
+          visibleOpportunities.length === 0 &&
           !error && (
             <div className="text-center py-16">
               <div className="text-5xl mb-4">📭</div>
               <p className="text-slate-400 text-lg mb-1">
-                No opportunities found in the last {selectedHours} hours
+                {hiddenCount > 0
+                  ? `All opportunities are hidden`
+                  : `No opportunities found in the last ${selectedHours} hours`}
               </p>
               <p className="text-slate-500 text-sm">
-                Try a different time range or check back later
+                {hiddenCount > 0 ? (
+                  <button
+                    onClick={() => setShowHidden(true)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Show {hiddenCount} hidden opportunit{hiddenCount === 1 ? 'y' : 'ies'}
+                  </button>
+                ) : (
+                  'Try a different time range or check back later'
+                )}
               </p>
             </div>
           )}
 
         {/* Results */}
-        {!loading && opportunities.length > 0 && (
+        {!loading && visibleOpportunities.length > 0 && (
           <>
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-medium text-slate-400">
-                {opportunities.length} opportunit
-                {opportunities.length === 1 ? 'y' : 'ies'} found
+                {visibleOpportunities.length} opportunit
+                {visibleOpportunities.length === 1 ? 'y' : 'ies'}
+                {showHidden && hiddenCount > 0 && ` (${hiddenCount} hidden)`}
               </span>
+              {hiddenCount > 0 && (
+                <button
+                  onClick={() => setShowHidden(!showHidden)}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {showHidden ? 'Hide hidden' : `Show ${hiddenCount} hidden`}
+                </button>
+              )}
             </div>
 
             <div className="space-y-4">
-              {opportunities.map((opp, idx) => (
+              {visibleOpportunities.map((opp, idx) => (
                 <div
                   key={opp.url + idx}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200"
+                  className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''}`}
                 >
+                  {/* Hide button */}
+                  {opp.id && (
+                    <button
+                      onClick={() => hideOpportunity(opp)}
+                      disabled={hidingIds.has(opp.id)}
+                      className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-colors"
+                      title={opp.hidden ? 'Unhide opportunity' : 'Hide opportunity'}
+                    >
+                      {opp.hidden ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+
                   {/* Badges */}
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-3 pr-8">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700/30">
                       r/{opp.subreddit}
                     </span>

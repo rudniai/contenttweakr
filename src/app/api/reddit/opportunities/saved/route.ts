@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 // GET - Load saved opportunities with their responses from DB
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -11,8 +11,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const includeHidden = searchParams.get('includeHidden') === 'true';
+
     // Fetch opportunities with their latest response
-    const { data: opportunities, error } = await supabase
+    let query = supabase
       .from('opportunities')
       .select(`
         id,
@@ -24,6 +27,7 @@ export async function GET() {
         upvotes,
         comments,
         scanned_at,
+        hidden,
         generated_responses (
           id,
           response_text,
@@ -33,6 +37,12 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('scanned_at', { ascending: false })
       .limit(50);
+
+    if (!includeHidden) {
+      query = query.or('hidden.is.null,hidden.eq.false');
+    }
+
+    const { data: opportunities, error } = await query;
 
     if (error) {
       console.error('Error loading opportunities:', error);
@@ -50,6 +60,7 @@ export async function GET() {
       upvotes: opp.upvotes,
       comments: opp.comments,
       date: opp.scanned_at,
+      hidden: opp.hidden || false,
       aiResponse: opp.generated_responses?.[0]?.response_text || undefined,
     }));
 
