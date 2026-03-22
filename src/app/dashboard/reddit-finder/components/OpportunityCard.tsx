@@ -44,6 +44,8 @@ export interface OpportunityCardProps {
   onGenerateResponse: (idx: number) => void;
   onCopyToClipboard: (text: string, idx: number) => void;
   onHide: (opp: Opportunity) => void;
+  onMarkReplied: (opp: Opportunity) => void;
+  isMarkingReplied: boolean;
 }
 
 export default function OpportunityCard({
@@ -55,6 +57,8 @@ export default function OpportunityCard({
   onGenerateResponse,
   onCopyToClipboard,
   onHide,
+  onMarkReplied,
+  isMarkingReplied,
 }: OpportunityCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
@@ -79,7 +83,7 @@ export default function OpportunityCard({
 
   return (
     <div
-      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''}`}
+      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''} ${opp.repliedAt ? 'opacity-60' : ''}`}
     >
       {/* Hide button */}
       {opp.id && (
@@ -108,6 +112,11 @@ export default function OpportunityCard({
           r/{opp.subreddit}
         </span>
         <ConfidenceBadge score={opp.confidence} />
+        {opp.repliedAt && (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300 border border-purple-700/30">
+            Replied
+          </span>
+        )}
         <span className="text-xs text-slate-500">
           {opp.upvotes} upvotes &middot; {opp.comments} comments
         </span>
@@ -190,6 +199,15 @@ export default function OpportunityCard({
                     >
                       {copiedIdx === idx ? 'Copied!' : 'Copy'}
                     </Button>
+                    {!opp.repliedAt && opp.id && (
+                      <Button
+                        onClick={() => onMarkReplied(opp)}
+                        disabled={isMarkingReplied}
+                        className="text-xs px-3 py-1 rounded-md bg-purple-700 hover:bg-purple-600 text-purple-100 transition-colors"
+                      >
+                        {isMarkingReplied ? 'Marking...' : 'Mark as Replied'}
+                      </Button>
+                    )}
                   </>
                 )}
               </div>

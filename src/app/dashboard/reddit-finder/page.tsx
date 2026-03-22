@@ -24,6 +24,8 @@ export default function RedditFinderPage() {
   const [hasScanned, setHasScanned] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
   const [hidingIds, setHidingIds] = useState<Set<string>>(new Set());
+  const [hideReplied, setHideReplied] = useState(false);
+  const [markingRepliedIds, setMarkingRepliedIds] = useState<Set<string>>(new Set());
 
   const setTypedError = useCallback((message: string, type: ErrorType) => {
     setError({ message, type });
@@ -226,11 +228,51 @@ export default function RedditFinderPage() {
     }
   };
 
-  const visibleOpportunities = showHidden
-    ? opportunities
-    : opportunities.filter((o) => !o.hidden);
+  const markReplied = async (opp: Opportunity) => {
+    if (!opp.id) return;
+
+    setMarkingRepliedIds((prev) => new Set(prev).add(opp.id!));
+
+    // Optimistic update
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id === opp.id ? { ...o, repliedAt: new Date().toISOString() } : o))
+    );
+
+    try {
+      const res = await fetch('/api/reddit/opportunities/mark-replied', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityId: opp.id }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        setOpportunities((prev) =>
+          prev.map((o) => (o.id === opp.id ? { ...o, repliedAt: null } : o))
+        );
+      }
+    } catch {
+      // Revert on failure
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id === opp.id ? { ...o, repliedAt: null } : o))
+      );
+    } finally {
+      setMarkingRepliedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(opp.id!);
+        return next;
+      });
+    }
+  };
+
+  const visibleOpportunities = opportunities.filter((o) => {
+    if (!showHidden && o.hidden) return false;
+    if (hideReplied && o.repliedAt) return false;
+    return true;
+  });
 
   const hiddenCount = opportunities.filter((o) => o.hidden).length;
+  const repliedCount = opportunities.filter((o) => o.repliedAt).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-8">
@@ -268,8 +310,11 @@ export default function RedditFinderPage() {
           <Filters
             visibleCount={visibleOpportunities.length}
             hiddenCount={hiddenCount}
+            repliedCount={repliedCount}
             showHidden={showHidden}
+            hideReplied={hideReplied}
             onSetShowHidden={setShowHidden}
+            onSetHideReplied={setHideReplied}
           />
         )}
 
@@ -289,6 +334,8 @@ export default function RedditFinderPage() {
             onGenerateResponse={generateResponse}
             onCopyToClipboard={copyToClipboard}
             onHide={hideOpportunity}
+            onMarkReplied={markReplied}
+            markingRepliedIds={markingRepliedIds}
             onSetShowHidden={setShowHidden}
           />
         </ErrorBoundary>

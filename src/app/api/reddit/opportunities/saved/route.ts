@@ -28,6 +28,7 @@ export async function GET(request: Request) {
         comments,
         scanned_at,
         hidden,
+        replied_at,
         generated_responses (
           id,
           response_text,
@@ -61,6 +62,7 @@ export async function GET(request: Request) {
       comments: opp.comments,
       date: opp.scanned_at,
       hidden: opp.hidden || false,
+      repliedAt: opp.replied_at || null,
       aiResponse: opp.generated_responses?.[0]?.response_text || undefined,
     }));
 

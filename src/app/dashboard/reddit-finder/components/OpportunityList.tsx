@@ -37,6 +37,8 @@ export interface OpportunityListProps {
   onGenerateResponse: (idx: number) => void;
   onCopyToClipboard: (text: string, idx: number) => void;
   onHide: (opp: Opportunity) => void;
+  onMarkReplied: (opp: Opportunity) => void;
+  markingRepliedIds: Set<string>;
   onSetShowHidden: (show: boolean) => void;
 }
 
@@ -55,6 +57,8 @@ export default function OpportunityList({
   onGenerateResponse,
   onCopyToClipboard,
   onHide,
+  onMarkReplied,
+  markingRepliedIds,
   onSetShowHidden,
 }: OpportunityListProps) {
   // Loading saved state
@@ -142,6 +146,8 @@ export default function OpportunityList({
             onGenerateResponse={onGenerateResponse}
             onCopyToClipboard={onCopyToClipboard}
             onHide={onHide}
+            onMarkReplied={onMarkReplied}
+            isMarkingReplied={!!opp.id && markingRepliedIds.has(opp.id)}
           />
         ))}
       </div>

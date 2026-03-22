@@ -3,15 +3,21 @@
 export interface FiltersProps {
   visibleCount: number;
   hiddenCount: number;
+  repliedCount: number;
   showHidden: boolean;
+  hideReplied: boolean;
   onSetShowHidden: (show: boolean) => void;
+  onSetHideReplied: (hide: boolean) => void;
 }
 
 export default function Filters({
   visibleCount,
   hiddenCount,
+  repliedCount,
   showHidden,
+  hideReplied,
   onSetShowHidden,
+  onSetHideReplied,
 }: FiltersProps) {
   if (visibleCount === 0) return null;
 
@@ -22,14 +28,24 @@ export default function Filters({
         {visibleCount === 1 ? 'y' : 'ies'}
         {showHidden && hiddenCount > 0 && ` (${hiddenCount} hidden)`}
       </span>
-      {hiddenCount > 0 && (
-        <button
-          onClick={() => onSetShowHidden(!showHidden)}
-          className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          {showHidden ? 'Hide hidden' : `Show ${hiddenCount} hidden`}
-        </button>
-      )}
+      <div className="flex items-center gap-4">
+        {repliedCount > 0 && (
+          <button
+            onClick={() => onSetHideReplied(!hideReplied)}
+            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            {hideReplied ? `Show ${repliedCount} replied` : 'Hide replied'}
+          </button>
+        )}
+        {hiddenCount > 0 && (
+          <button
+            onClick={() => onSetShowHidden(!showHidden)}
+            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            {showHidden ? 'Hide hidden' : `Show ${hiddenCount} hidden`}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

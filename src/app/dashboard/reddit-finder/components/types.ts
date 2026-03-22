@@ -9,6 +9,7 @@ export interface Opportunity {
   upvotes: number;
   comments: number;
   hidden?: boolean;
+  repliedAt?: string | null;
   aiResponse?: string;
 }
 

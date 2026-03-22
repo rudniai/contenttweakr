@@ -17,7 +17,7 @@
 |---|------|--------|--------|--------------|-------|
 | 7 | Copy-to-clipboard for generated responses | DONE | S | None | Async with error handling |
 | 8 | Response editing before use | DONE | M | None | Inline edit with save/cancel, restore original |
-| 9 | Reply tracking (mark opportunity as "responded") | TODO | M | DB migration | New column or table |
+| 9 | Reply tracking (mark opportunity as "responded") | DONE | M | DB migration | `replied_at` column, mark-replied API, filter in UI |
 | 10 | User-configurable subreddit list | TODO | M | DB migration | Settings page needed |
 | 11 | User-configurable keyword list | TODO | M | DB migration, #10 | Part of settings |
 | 12 | Loading states and error boundaries | DONE | M | #6 | ErrorBoundary, ErrorAlert, loading skeletons |
