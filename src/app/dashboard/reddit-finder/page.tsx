@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface Opportunity {
@@ -14,6 +14,17 @@ interface Opportunity {
   upvotes: number;
   comments: number;
   aiResponse?: string;
+}
+
+interface ScanStatus {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  hours: number;
+  result_count: number | null;
+  error: string | null;
+  created_at: string;
+  completed_at: string | null;
+  opportunities?: Opportunity[];
 }
 
 function SkeletonCard() {
@@ -52,17 +63,133 @@ function ConfidenceBadge({ score }: { score: number }) {
   );
 }
 
+function ScanProgressIndicator({ status, resultCount }: { status: string; resultCount: number | null }) {
+  const stages = [
+    { key: 'pending', label: 'Queued', icon: '⏳' },
+    { key: 'processing', label: 'Scanning Reddit', icon: '🔍' },
+    { key: 'completed', label: resultCount !== null ? `Found ${resultCount} results` : 'Complete', icon: '✅' },
+  ];
+
+  const currentIdx = stages.findIndex(s => s.key === status);
+
+  return (
+    <div className="flex items-center gap-3">
+      {stages.map((stage, idx) => {
+        const isActive = stage.key === status;
+        const isDone = idx < currentIdx;
+        const isFuture = idx > currentIdx;
+
+        return (
+          <div key={stage.key} className="flex items-center gap-2">
+            {idx > 0 && (
+              <div className={`w-8 h-0.5 ${isDone ? 'bg-emerald-500' : isFuture ? 'bg-slate-700' : 'bg-blue-500'}`} />
+            )}
+            <div className={`flex items-center gap-1.5 text-sm ${
+              isActive ? 'text-blue-300 font-medium' : isDone ? 'text-emerald-400' : 'text-slate-600'
+            }`}>
+              <span className="text-base">{isDone ? '✅' : stage.icon}</span>
+              <span>{stage.label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PulsingDot() {
+  return (
+    <span className="relative flex h-3 w-3">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+      <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+    </span>
+  );
+}
+
+function Spinner({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin text-white ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
+}
+
 export default function RedditFinderPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scannedCount, setScannedCount] = useState(0);
-  const [timeRange, setTimeRange] = useState('24 hours');
   const [selectedHours, setSelectedHours] = useState(24);
   const [generatingIdx, setGeneratingIdx] = useState<Set<number>>(new Set());
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
+
+  // Scan request state
+  const [scanRequestId, setScanRequestId] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  // Poll scan status
+  useEffect(() => {
+    if (!scanRequestId) return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/reddit/scan/status/${scanRequestId}`);
+        const data: ScanStatus = await res.json();
+        setScanStatus(data);
+
+        if (data.status === 'completed') {
+          stopPolling();
+          setLoading(false);
+          setHasScanned(true);
+
+          if (data.opportunities && data.opportunities.length > 0) {
+            setOpportunities(data.opportunities.map(opp => ({
+              id: opp.id,
+              date: opp.date || '',
+              subreddit: opp.subreddit,
+              title: opp.title,
+              url: opp.url,
+              context: opp.context || '',
+              confidence: opp.confidence,
+              upvotes: opp.upvotes,
+              comments: opp.comments,
+            })));
+          } else {
+            setOpportunities([]);
+          }
+          setScanRequestId(null);
+        } else if (data.status === 'failed') {
+          stopPolling();
+          setLoading(false);
+          setError(data.error || 'Scan failed');
+          setScanRequestId(null);
+        }
+      } catch (err) {
+        console.error('Failed to poll scan status:', err);
+      }
+    };
+
+    // Poll immediately, then every 3 seconds
+    poll();
+    pollIntervalRef.current = setInterval(poll, 3000);
+
+    return () => stopPolling();
+  }, [scanRequestId, stopPolling]);
 
   // Load saved opportunities from DB on mount
   useEffect(() => {
@@ -86,26 +213,26 @@ export default function RedditFinderPage() {
   const findOpportunities = async () => {
     setLoading(true);
     setError(null);
+    setScanStatus(null);
 
     try {
-      const response = await fetch(
-        `/api/reddit/opportunities?hours=${selectedHours}`
-      );
+      const response = await fetch('/api/reddit/scan/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hours: selectedHours }),
+      });
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch opportunities');
+        throw new Error(data.error || 'Failed to create scan request');
       }
 
-      setOpportunities(data.opportunities || []);
-      setScannedCount(data.scannedSubreddits || 0);
-      setTimeRange(data.timeRange || `${selectedHours} hours`);
+      setScanRequestId(data.id);
+      setScanStatus({ id: data.id, status: 'pending', hours: selectedHours, result_count: null, error: null, created_at: new Date().toISOString(), completed_at: null });
     } catch (err) {
       const error = err as Error;
       setError(error.message);
-    } finally {
       setLoading(false);
-      setHasScanned(true);
     }
   };
 
@@ -153,6 +280,8 @@ export default function RedditFinderPage() {
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
+  const isScanning = loading && scanStatus !== null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
@@ -193,27 +322,8 @@ export default function RedditFinderPage() {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Scanning Reddit...
+                  <Spinner />
+                  Scanning...
                 </span>
               ) : (
                 'Find Opportunities'
@@ -221,25 +331,41 @@ export default function RedditFinderPage() {
             </Button>
           </div>
 
-          {/* Scan info */}
-          {loading && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-blue-400">
-              <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse" />
-              Scanning 16 subreddits &mdash; this takes about 30 seconds...
-            </div>
-          )}
+          {/* Scan progress */}
+          {isScanning && (
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center gap-3 text-sm text-blue-300">
+                <PulsingDot />
+                <span>
+                  {scanStatus?.status === 'pending' && 'Waiting for Rudni to pick up the scan...'}
+                  {scanStatus?.status === 'processing' && 'Rudni is scanning Reddit locally...'}
+                </span>
+              </div>
 
-          {!loading && scannedCount > 0 && (
-            <div className="mt-4 text-sm text-slate-400">
-              Scanned {scannedCount} subreddits in the last {timeRange}
+              <ScanProgressIndicator
+                status={scanStatus?.status || 'pending'}
+                resultCount={scanStatus?.result_count ?? null}
+              />
+
+              <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
+                <p className="text-xs text-slate-500">
+                  Your scan request has been queued. The local scanner will check Reddit
+                  and upload results directly to your portal. This avoids rate limits and
+                  provides better results.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-900/30 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg mb-6">
-            {error}
+          <div className="bg-red-900/30 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
+            <span className="text-lg">&#x26A0;</span>
+            <div>
+              <p className="font-medium">Scan Error</p>
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
           </div>
         )}
 
@@ -289,7 +415,7 @@ export default function RedditFinderPage() {
             <div className="text-center py-16">
               <div className="text-5xl mb-4">📭</div>
               <p className="text-slate-400 text-lg mb-1">
-                No opportunities found in the last {timeRange}
+                No opportunities found in the last {selectedHours} hours
               </p>
               <p className="text-slate-500 text-sm">
                 Try a different time range or check back later
@@ -388,26 +514,7 @@ export default function RedditFinderPage() {
                       >
                         {generatingIdx.has(idx) ? (
                           <span className="flex items-center justify-center gap-2">
-                            <svg
-                              className="animate-spin h-4 w-4 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
+                            <Spinner className="h-4 w-4" />
                             Generating Response...
                           </span>
                         ) : (
