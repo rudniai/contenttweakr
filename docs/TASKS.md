@@ -4,10 +4,10 @@
 
 | # | Task | Status | Effort | Dependencies | Notes |
 |---|------|--------|--------|--------------|-------|
-| 1 | Remove dead API routes (`/scan/request`, `/opportunities` root) | TODO | S | None | Dead code |
-| 2 | Remove unused `openai` dependency | TODO | S | None | |
-| 3 | Extract constants (subreddits, keywords) into shared config | TODO | S | None | Duplicated in worker + execute route |
-| 4 | Delete legacy files (`supabase-schema.sql`, `cleanup-plan.md`, `poll-and-scan.sh`) | TODO | S | None | Outdated |
+| 1 | Remove dead API routes (`/scan/request`, `/opportunities` root) | DONE | S | None | Dead code |
+| 2 | Remove unused `openai` dependency | DONE | S | None | |
+| 3 | Extract constants (subreddits, keywords) into shared config | DONE | S | None | `src/lib/reddit/config.ts` |
+| 4 | Delete legacy files (`supabase-schema.sql`, `cleanup-plan.md`, `poll-and-scan.sh`) | DONE | S | None | Deleted |
 | 5 | Add input validation to API routes | TODO | M | None | Sanitize user inputs |
 | 6 | Break up `reddit-finder/page.tsx` into components | TODO | L | None | ~800 line monolith |
 

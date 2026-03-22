@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { SUBREDDITS, KEYWORDS, QUESTION_PATTERNS, isRelevant, calculateRelevance } from '../src/lib/reddit/config';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -20,35 +21,6 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-// ── Reddit scanning logic (copied from execute route) ───────────────────────
-const SUBREDDITS = [
-  'webdev', 'SEO', 'smallbusiness', 'Entrepreneur', 'SaaS',
-  'web_design', 'bigseo', 'marketing', 'startups', 'digitalnomad',
-  'indiehackers', 'indiedev', 'coderforhire', 'webdevtutorials', 'reactjs', 'nextjs',
-];
-
-const KEYWORDS = [
-  'website audit', 'seo check', 'site speed', 'ranking', 'free seo',
-  'website health', 'pagespeed', 'lighthouse', 'gtmetrix', 'site performance',
-  'core web vitals', 'mobile friendly', 'seo tools', 'website analyzer',
-  'website', 'site', 'my website', 'my site',
-  'feedback', 'review my', 'help with', 'advice',
-  'optimize', 'improve', 'slow', 'broken',
-];
-
-const QUESTION_PATTERNS = [
-  /how (do|can) i check/i,
-  /what tool(s)? (can|should) i use/i,
-  /need recommendations? for/i,
-  /is there a (free|good)/i,
-  /anyone know a (good|free)/i,
-  /looking for (a|an) (free|good|cheap)/i,
-  /can someone (review|check|look at)/i,
-  /feedback on my/i,
-  /thoughts on/i,
-  /how to (improve|optimize|fix)/i,
-];
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -133,39 +105,6 @@ async function fetchSubredditPosts(subreddit: string, limit = 100): Promise<Redd
     }
   }
   return [];
-}
-
-function isRelevant(text: string): boolean {
-  if (!text) return false;
-  const lowerText = text.toLowerCase();
-  const hasKeyword = KEYWORDS.some((kw) => lowerText.includes(kw.toLowerCase()));
-  const hasQuestionPattern = QUESTION_PATTERNS.some((pattern) => pattern.test(text));
-  return hasKeyword || hasQuestionPattern;
-}
-
-function calculateRelevance(title: string, selftext: string): number {
-  let score = 0;
-  const text = `${title} ${selftext || ''}`.toLowerCase();
-
-  const highValueKeywords = ['website audit', 'seo check', 'free seo tool', 'site speed'];
-  highValueKeywords.forEach((kw) => {
-    if (text.includes(kw)) score += 25;
-  });
-
-  if (QUESTION_PATTERNS.some((p) => p.test(text))) score += 15;
-
-  const broadKeywords = ['website', 'site', 'my website', 'my site'];
-  KEYWORDS.forEach((kw) => {
-    if (text.includes(kw.toLowerCase())) {
-      if (broadKeywords.includes(kw)) {
-        score += 10;
-      } else if (!highValueKeywords.includes(kw)) {
-        score += 5;
-      }
-    }
-  });
-
-  return Math.min(100, score);
 }
 
 // ── Scan execution ──────────────────────────────────────────────────────────
