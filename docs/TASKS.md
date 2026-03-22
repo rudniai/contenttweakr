@@ -15,7 +15,7 @@
 
 | # | Task | Status | Effort | Dependencies | Notes |
 |---|------|--------|--------|--------------|-------|
-| 7 | Copy-to-clipboard for generated responses | TODO | S | None | |
+| 7 | Copy-to-clipboard for generated responses | DONE | S | None | Async with error handling |
 | 8 | Response editing before use | TODO | M | None | Inline edit in UI |
 | 9 | Reply tracking (mark opportunity as "responded") | TODO | M | DB migration | New column or table |
 | 10 | User-configurable subreddit list | TODO | M | DB migration | Settings page needed |

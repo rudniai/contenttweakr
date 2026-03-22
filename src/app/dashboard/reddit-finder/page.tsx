@@ -277,10 +277,14 @@ export default function RedditFinderPage() {
     }
   };
 
-  const copyToClipboard = (text: string, idx: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIdx(idx);
-    setTimeout(() => setCopiedIdx(null), 2000);
+  const copyToClipboard = async (text: string, idx: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(null), 2000);
+    } catch {
+      setError('Failed to copy to clipboard');
+    }
   };
 
   const hideOpportunity = async (opp: Opportunity) => {
@@ -576,6 +580,7 @@ export default function RedditFinderPage() {
                             onClick={() =>
                               copyToClipboard(opp.aiResponse!, idx)
                             }
+                            aria-label="Copy response to clipboard"
                             className={`text-xs px-3 py-1 rounded-md transition-colors ${
                               copiedIdx === idx
                                 ? 'bg-emerald-700 text-emerald-100'
