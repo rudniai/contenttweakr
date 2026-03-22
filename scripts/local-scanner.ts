@@ -1,0 +1,308 @@
+#!/usr/bin/env npx tsx
+/**
+ * Local scanner worker — polls Supabase for pending scan_requests,
+ * runs Reddit scanning locally (no Vercel timeout), and uploads results.
+ *
+ * Usage: npx tsx scripts/local-scanner.ts
+ *    or: npm run scan
+ */
+
+import { createClient } from '@supabase/supabase-js';
+
+// ── Config ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const POLL_INTERVAL_MS = 30_000; // 30 seconds
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in env');
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+// ── Reddit scanning logic (copied from execute route) ───────────────────────
+const SUBREDDITS = [
+  'webdev', 'SEO', 'smallbusiness', 'Entrepreneur', 'SaaS',
+  'web_design', 'bigseo', 'marketing', 'startups', 'digitalnomad',
+  'indiehackers', 'indiedev', 'coderforhire', 'webdevtutorials', 'reactjs', 'nextjs',
+];
+
+const KEYWORDS = [
+  'website audit', 'seo check', 'site speed', 'ranking', 'free seo',
+  'website health', 'pagespeed', 'lighthouse', 'gtmetrix', 'site performance',
+  'core web vitals', 'mobile friendly', 'seo tools', 'website analyzer',
+  'website', 'site', 'my website', 'my site',
+  'feedback', 'review my', 'help with', 'advice',
+  'optimize', 'improve', 'slow', 'broken',
+];
+
+const QUESTION_PATTERNS = [
+  /how (do|can) i check/i,
+  /what tool(s)? (can|should) i use/i,
+  /need recommendations? for/i,
+  /is there a (free|good)/i,
+  /anyone know a (good|free)/i,
+  /looking for (a|an) (free|good|cheap)/i,
+  /can someone (review|check|look at)/i,
+  /feedback on my/i,
+  /thoughts on/i,
+  /how to (improve|optimize|fix)/i,
+];
+
+const USER_AGENTS = [
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+];
+
+const MAX_RETRIES = 3;
+
+interface RedditPost {
+  id: string;
+  title: string;
+  selftext: string;
+  url: string;
+  permalink: string;
+  subreddit: string;
+  created_utc: number;
+  ups: number;
+  num_comments: number;
+}
+
+interface Opportunity {
+  date: string;
+  subreddit: string;
+  title: string;
+  url: string;
+  context: string;
+  confidence: number;
+  upvotes: number;
+  comments: number;
+}
+
+function randomUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function randomDelay(minMs: number, maxMs: number): Promise<void> {
+  return sleep(minMs + Math.random() * (maxMs - minMs));
+}
+
+async function fetchSubredditPosts(subreddit: string, limit = 100): Promise<RedditPost[]> {
+  const url = `https://www.reddit.com/r/${subreddit}/new.json?limit=${limit}`;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': randomUserAgent(),
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        },
+      });
+
+      if (response.status === 429 || response.status === 403) {
+        console.warn(`  r/${subreddit}: ${response.status} on attempt ${attempt}/${MAX_RETRIES}`);
+        if (attempt < MAX_RETRIES) {
+          await randomDelay(3000 * attempt, 6000 * attempt);
+          continue;
+        }
+        console.error(`  r/${subreddit}: ${response.status} after ${MAX_RETRIES} attempts, skipping`);
+        return [];
+      }
+
+      if (!response.ok) {
+        console.error(`  r/${subreddit}: HTTP ${response.status}`);
+        return [];
+      }
+
+      const data = await response.json();
+      return data.data.children.map((child: { data: RedditPost }) => child.data);
+    } catch (err) {
+      console.error(`  r/${subreddit}: fetch error attempt ${attempt}/${MAX_RETRIES}:`, err);
+      if (attempt < MAX_RETRIES) {
+        await randomDelay(3000 * attempt, 6000 * attempt);
+        continue;
+      }
+    }
+  }
+  return [];
+}
+
+function isRelevant(text: string): boolean {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+  const hasKeyword = KEYWORDS.some((kw) => lowerText.includes(kw.toLowerCase()));
+  const hasQuestionPattern = QUESTION_PATTERNS.some((pattern) => pattern.test(text));
+  return hasKeyword || hasQuestionPattern;
+}
+
+function calculateRelevance(title: string, selftext: string): number {
+  let score = 0;
+  const text = `${title} ${selftext || ''}`.toLowerCase();
+
+  const highValueKeywords = ['website audit', 'seo check', 'free seo tool', 'site speed'];
+  highValueKeywords.forEach((kw) => {
+    if (text.includes(kw)) score += 25;
+  });
+
+  if (QUESTION_PATTERNS.some((p) => p.test(text))) score += 15;
+
+  const broadKeywords = ['website', 'site', 'my website', 'my site'];
+  KEYWORDS.forEach((kw) => {
+    if (text.includes(kw.toLowerCase())) {
+      if (broadKeywords.includes(kw)) {
+        score += 10;
+      } else if (!highValueKeywords.includes(kw)) {
+        score += 5;
+      }
+    }
+  });
+
+  return Math.min(100, score);
+}
+
+// ── Scan execution ──────────────────────────────────────────────────────────
+async function executeScan(scanRequest: { id: string; user_id: string; hours: number }) {
+  const { id, user_id, hours } = scanRequest;
+  console.log(`\n🔍 Executing scan ${id} (user=${user_id}, hours=${hours})`);
+
+  // Mark as processing
+  await supabase.from('scan_requests').update({ status: 'processing' }).eq('id', id);
+
+  try {
+    const opportunities: Opportunity[] = [];
+    const now = Date.now() / 1000;
+    const cutoffTime = now - hours * 3600;
+    const succeeded: string[] = [];
+    const failed: string[] = [];
+
+    for (const sub of SUBREDDITS) {
+      const posts = await fetchSubredditPosts(sub, 100);
+
+      if (posts.length === 0) {
+        failed.push(sub);
+        console.log(`  [${sub}] No posts (likely blocked)`);
+      } else {
+        succeeded.push(sub);
+        console.log(`  [${sub}] ${posts.length} posts`);
+      }
+
+      for (const post of posts) {
+        if (post.created_utc < cutoffTime) continue;
+        if (!isRelevant(post.title + ' ' + (post.selftext || ''))) continue;
+
+        const score = calculateRelevance(post.title, post.selftext);
+        if (score < 10) continue;
+
+        opportunities.push({
+          date: new Date(post.created_utc * 1000).toISOString(),
+          subreddit: post.subreddit,
+          title: post.title,
+          url: `https://reddit.com${post.permalink}`,
+          context: (post.selftext || '').substring(0, 500),
+          confidence: score,
+          upvotes: post.ups,
+          comments: post.num_comments,
+        });
+      }
+
+      await randomDelay(3000, 6000);
+    }
+
+    console.log(`  Succeeded: ${succeeded.length}/${SUBREDDITS.length} | Failed: ${failed.length}`);
+
+    // Sort by confidence and take top 20
+    opportunities.sort((a, b) => b.confidence - a.confidence);
+    const top20 = opportunities.slice(0, 20);
+
+    // Save opportunities to DB
+    if (top20.length > 0) {
+      const rows = top20.map((opp) => ({
+        user_id,
+        subreddit: opp.subreddit,
+        title: opp.title,
+        url: opp.url,
+        context: opp.context,
+        confidence: opp.confidence,
+        upvotes: opp.upvotes,
+        comments: opp.comments,
+        scanned_at: new Date().toISOString(),
+      }));
+
+      const { error: upsertError } = await supabase
+        .from('opportunities')
+        .upsert(rows, { onConflict: 'user_id,url' });
+
+      if (upsertError) {
+        console.error('  Error upserting opportunities:', upsertError);
+      }
+    }
+
+    // Mark completed
+    await supabase
+      .from('scan_requests')
+      .update({
+        status: 'completed',
+        result_count: top20.length,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    console.log(`✅ Scan ${id} completed — ${top20.length} opportunities found`);
+  } catch (error) {
+    console.error(`❌ Scan ${id} failed:`, error);
+
+    await supabase
+      .from('scan_requests')
+      .update({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+  }
+}
+
+// ── Poll loop ───────────────────────────────────────────────────────────────
+async function poll() {
+  const { data: pending, error } = await supabase
+    .from('scan_requests')
+    .select('id, user_id, hours')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (error) {
+    console.error('Poll error:', error.message);
+    return;
+  }
+
+  if (pending && pending.length > 0) {
+    await executeScan(pending[0]);
+  }
+}
+
+async function main() {
+  console.log('🚀 Local scanner started — polling every 30s');
+  console.log(`   Supabase: ${SUPABASE_URL}`);
+
+  // Run immediately on start, then loop
+  await poll();
+
+  setInterval(async () => {
+    try {
+      await poll();
+    } catch (err) {
+      console.error('Poll loop error:', err);
+    }
+  }, POLL_INTERVAL_MS);
+}
+
+main();
