@@ -216,7 +216,7 @@ export default function RedditFinderPage() {
     setScanStatus(null);
 
     try {
-      const response = await fetch('/api/reddit/scan/request', {
+      const response = await fetch('/api/reddit/scan/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hours: selectedHours }),
@@ -337,8 +337,8 @@ export default function RedditFinderPage() {
               <div className="flex items-center gap-3 text-sm text-blue-300">
                 <PulsingDot />
                 <span>
-                  {scanStatus?.status === 'pending' && 'Waiting for Rudni to pick up the scan...'}
-                  {scanStatus?.status === 'processing' && 'Rudni is scanning Reddit locally...'}
+                  {scanStatus?.status === 'pending' && 'Starting scan...'}
+                  {scanStatus?.status === 'processing' && 'Scanning Reddit...'}
                 </span>
               </div>
 
@@ -349,9 +349,7 @@ export default function RedditFinderPage() {
 
               <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
                 <p className="text-xs text-slate-500">
-                  Your scan request has been queued. The local scanner will check Reddit
-                  and upload results directly to your portal. This avoids rate limits and
-                  provides better results.
+                  Scan triggered immediately. Results will appear shortly.
                 </p>
               </div>
             </div>
