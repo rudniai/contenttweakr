@@ -14,7 +14,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_settings')
-      .select('subreddits, keywords, scan_frequency')
+      .select('subreddits, keywords, scan_frequency, email_notifications, notification_threshold')
       .eq('user_id', user.id)
       .single();
 
@@ -27,6 +27,8 @@ export async function GET() {
       subreddits: data?.subreddits ?? SUBREDDITS,
       keywords: data?.keywords ?? KEYWORDS,
       scan_frequency: data?.scan_frequency ?? 'disabled',
+      email_notifications: data?.email_notifications ?? false,
+      notification_threshold: data?.notification_threshold ?? 70,
       isCustom: {
         subreddits: data?.subreddits != null,
         keywords: data?.keywords != null,
@@ -57,7 +59,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { subreddits, keywords, scan_frequency } = parsed.data;
+    const { subreddits, keywords, scan_frequency, email_notifications, notification_threshold } = parsed.data;
 
     const upsertData: Record<string, unknown> = {
       user_id: user.id,
@@ -66,6 +68,12 @@ export async function PUT(request: Request) {
     };
     if (scan_frequency !== undefined) {
       upsertData.scan_frequency = scan_frequency;
+    }
+    if (email_notifications !== undefined) {
+      upsertData.email_notifications = email_notifications;
+    }
+    if (notification_threshold !== undefined) {
+      upsertData.notification_threshold = notification_threshold;
     }
 
     const { error } = await supabase

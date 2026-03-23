@@ -9,6 +9,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { SUBREDDITS as DEFAULT_SUBREDDITS, KEYWORDS as DEFAULT_KEYWORDS, QUESTION_PATTERNS, calculateRelevance } from '../src/lib/reddit/config';
+import { sendOpportunityNotification } from '../src/lib/email/send';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -108,21 +109,41 @@ async function fetchSubredditPosts(subreddit: string, limit = 100): Promise<Redd
 }
 
 // ── User settings ────────────────────────────────────────────────────────────
-async function getUserSettings(userId: string): Promise<{ subreddits: string[]; keywords: string[] }> {
+interface UserSettings {
+  subreddits: string[];
+  keywords: string[];
+  email_notifications: boolean;
+  notification_threshold: number;
+}
+
+async function getUserSettings(userId: string): Promise<UserSettings> {
   const { data, error } = await supabase
     .from('user_settings')
-    .select('subreddits, keywords')
+    .select('subreddits, keywords, email_notifications, notification_threshold')
     .eq('user_id', userId)
     .single();
 
   if (error || !data) {
-    return { subreddits: DEFAULT_SUBREDDITS, keywords: DEFAULT_KEYWORDS };
+    return {
+      subreddits: DEFAULT_SUBREDDITS,
+      keywords: DEFAULT_KEYWORDS,
+      email_notifications: false,
+      notification_threshold: 70,
+    };
   }
 
   return {
     subreddits: data.subreddits ?? DEFAULT_SUBREDDITS,
     keywords: data.keywords ?? DEFAULT_KEYWORDS,
+    email_notifications: data.email_notifications ?? false,
+    notification_threshold: data.notification_threshold ?? 70,
   };
+}
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
+  if (error || !data?.user?.email) return null;
+  return data.user.email;
 }
 
 function isRelevantWithKeywords(text: string, keywords: string[]): boolean {
@@ -226,6 +247,25 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
       .eq('id', id);
 
     console.log(`✅ Scan ${id} completed — ${top20.length} opportunities found`);
+
+    // Send email notification if enabled
+    if (settings.email_notifications) {
+      const highConfidence = top20.filter((opp) => opp.confidence >= settings.notification_threshold);
+      if (highConfidence.length > 0) {
+        const email = await getUserEmail(user_id);
+        if (email) {
+          console.log(`📧 Sending notification to ${email} (${highConfidence.length} opps >= ${settings.notification_threshold}%)`);
+          const result = await sendOpportunityNotification(email, highConfidence, id);
+          if (result.success) {
+            console.log('📧 Email sent successfully');
+          } else {
+            console.warn('📧 Email failed:', result.error);
+          }
+        } else {
+          console.warn('📧 No email found for user, skipping notification');
+        }
+      }
+    }
   } catch (error) {
     console.error(`❌ Scan ${id} failed:`, error);
 

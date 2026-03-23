@@ -8,11 +8,14 @@ export default function SettingsPage() {
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [scanFrequency, setScanFrequency] = useState<ScanFrequency>('disabled');
+  const [emailNotifications, setEmailNotifications] = useState(false);
+  const [notificationThreshold, setNotificationThreshold] = useState(70);
   const [isCustom, setIsCustom] = useState({ subreddits: false, keywords: false });
   const [subredditInput, setSubredditInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadSettings = useCallback(async () => {
@@ -23,6 +26,8 @@ export default function SettingsPage() {
       setSubreddits(data.subreddits);
       setKeywords(data.keywords);
       setScanFrequency(data.scan_frequency ?? 'disabled');
+      setEmailNotifications(data.email_notifications ?? false);
+      setNotificationThreshold(data.notification_threshold ?? 70);
       setIsCustom(data.isCustom);
     } catch {
       setMessage({ type: 'error', text: 'Failed to load settings' });
@@ -42,7 +47,13 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subreddits, keywords, scan_frequency: scanFrequency }),
+        body: JSON.stringify({
+          subreddits,
+          keywords,
+          scan_frequency: scanFrequency,
+          email_notifications: emailNotifications,
+          notification_threshold: notificationThreshold,
+        }),
       });
       if (!res.ok) throw new Error('Failed to save');
       setIsCustom({ subreddits: true, keywords: true });
@@ -73,6 +84,21 @@ export default function SettingsPage() {
       setMessage({ type: 'error', text: 'Failed to reset settings' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const sendTestEmail = async () => {
+    setSendingTest(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/notifications/test', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send test email');
+      setMessage({ type: 'success', text: 'Test email sent! Check your inbox.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send test email' });
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -216,6 +242,72 @@ export default function SettingsPage() {
               </option>
             ))}
           </select>
+        </div>
+      </section>
+
+      {/* Email Notifications */}
+      <section className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-white">Email Notifications</h2>
+        </div>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white font-medium">Enable email notifications</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Receive an email when high-confidence opportunities are found
+              </p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={emailNotifications}
+              onClick={() => setEmailNotifications(!emailNotifications)}
+              disabled={saving}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 ${
+                emailNotifications ? 'bg-blue-600' : 'bg-slate-700'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                  emailNotifications ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {emailNotifications && (
+            <>
+              <div className="border-t border-slate-800 pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-slate-300">Confidence threshold</label>
+                  <span className="text-sm font-mono text-blue-400">{notificationThreshold}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={notificationThreshold}
+                  onChange={(e) => setNotificationThreshold(Number(e.target.value))}
+                  disabled={saving}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Only notify for opportunities with confidence &ge; {notificationThreshold}%
+                </p>
+              </div>
+
+              <div className="border-t border-slate-800 pt-4">
+                <button
+                  onClick={sendTestEmail}
+                  disabled={sendingTest || saving}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {sendingTest ? 'Sending...' : 'Send test email'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

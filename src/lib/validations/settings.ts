@@ -18,6 +18,8 @@ export const updateSettingsSchema = z.object({
   subreddits: tagArray.nullable(),
   keywords: tagArray.nullable(),
   scan_frequency: z.enum(SCAN_FREQUENCIES).optional(),
+  email_notifications: z.boolean().optional(),
+  notification_threshold: z.number().int().min(0).max(100).optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
