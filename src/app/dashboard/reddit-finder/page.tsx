@@ -56,6 +56,7 @@ function RedditFinderContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkActioning, setIsBulkActioning] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
+  const [deletingResponseIds, setDeletingResponseIds] = useState<Set<string>>(new Set());
 
   const setTypedError = useCallback((message: string, type: ErrorType) => {
     setError({ message, type });
@@ -177,7 +178,7 @@ function RedditFinderContent() {
     }
   };
 
-  const generateResponse = async (idx: number) => {
+  const generateResponse = async (idx: number, model?: string) => {
     const opp = opportunities[idx];
     setGeneratingIdx((prev) => new Set(prev).add(idx));
 
@@ -190,6 +191,7 @@ function RedditFinderContent() {
           context: opp.context,
           subreddit: opp.subreddit,
           opportunityUrl: opp.url,
+          model: model || 'sonnet',
         }),
       });
       const data = await res.json();
@@ -200,7 +202,7 @@ function RedditFinderContent() {
 
       setOpportunities((prev) =>
         prev.map((o, i) =>
-          i === idx ? { ...o, aiResponse: data.response } : o
+          i === idx ? { ...o, aiResponse: data.response, aiResponseId: data.responseId, aiResponseModel: data.model } : o
         )
       );
     } catch (err) {
@@ -210,6 +212,42 @@ function RedditFinderContent() {
       setGeneratingIdx((prev) => {
         const next = new Set(prev);
         next.delete(idx);
+        return next;
+      });
+    }
+  };
+
+  const deleteResponse = async (opp: Opportunity) => {
+    if (!opp.aiResponseId) return;
+    const responseId = opp.aiResponseId;
+
+    setDeletingResponseIds((prev) => new Set(prev).add(responseId));
+
+    try {
+      const res = await fetch(`/api/reddit/responses/${responseId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete response');
+      }
+
+      // Clear the response from the opportunity
+      setOpportunities((prev) =>
+        prev.map((o) =>
+          o.aiResponseId === responseId
+            ? { ...o, aiResponse: undefined, aiResponseId: undefined, aiResponseModel: undefined }
+            : o
+        )
+      );
+    } catch (err) {
+      const type = classifyError(err);
+      setTypedError((err as Error).message || 'Failed to delete response', type === 'network' ? 'network' : 'generic');
+    } finally {
+      setDeletingResponseIds((prev) => {
+        const next = new Set(prev);
+        next.delete(responseId);
         return next;
       });
     }
@@ -477,6 +515,7 @@ function RedditFinderContent() {
               platformFilter={platformFilter}
               onSetPlatformFilter={setPlatformFilter}
               hasHN={opportunities.some((o) => o.platform === 'hackernews')}
+              hasPH={opportunities.some((o) => o.platform === 'producthunt')}
             />
             <BulkActionBar
               selectedCount={selectedIds.size}
@@ -513,6 +552,8 @@ function RedditFinderContent() {
             onSetShowHidden={setShowHidden}
             selectedIds={selectedIds}
             onSelect={toggleSelect}
+            onDeleteResponse={deleteResponse}
+            deletingResponseIds={deletingResponseIds}
           />
         </ErrorBoundary>
       </div>

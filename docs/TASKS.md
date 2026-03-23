@@ -39,6 +39,9 @@
 | 23 | Direct Reddit posting (OAuth) | TODO | XL | Reddit app registration | Complex OAuth flow |
 | 24 | Test coverage (unit + integration) | DONE | L | None | 98 tests: scoring, config/validation, API routes, components |
 | 25 | Rate limiting on API routes | DONE | M | None | In-memory sliding window, per-user throttling |
+| 26 | Robust worker daemon | DONE | M | None | Auto-restart, logging, PID management, heartbeat monitoring |
+| 27 | Opus response generation | DONE | M | None | Model selector (Sonnet/Opus), model badge on responses |
+| 28 | Delete/regenerate responses | DONE | M | None | Delete API, trash icon, regenerate button, confirmation dialog |
 
 ## Already Complete
 
@@ -53,6 +56,9 @@
 | ✓ | RLS on all tables | DONE | User-scoped data access |
 | ✓ | Dark theme UI | DONE | Tailwind + custom styles |
 | ✓ | Response persistence | DONE | Saves to DB, loads on refresh |
+| ✓ | Worker daemon | DONE | Auto-restart, heartbeat, health API |
+| ✓ | Opus model support | DONE | Model selector, badge, stored in DB |
+| ✓ | Delete/regenerate responses | DONE | Delete API, regenerate, confirmation |
 
 ---
 

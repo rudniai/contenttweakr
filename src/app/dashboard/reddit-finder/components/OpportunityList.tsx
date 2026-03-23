@@ -34,7 +34,7 @@ export interface OpportunityListProps {
   hidingIds: Set<string>;
   copiedIdx: number | null;
   error: string | null;
-  onGenerateResponse: (idx: number) => void;
+  onGenerateResponse: (idx: number, model?: string) => void;
   onCopyToClipboard: (text: string, idx: number) => void;
   onHide: (opp: Opportunity) => void;
   onMarkReplied: (opp: Opportunity) => void;
@@ -42,6 +42,8 @@ export interface OpportunityListProps {
   onSetShowHidden: (show: boolean) => void;
   selectedIds?: Set<string>;
   onSelect?: (opp: Opportunity) => void;
+  onDeleteResponse?: (opp: Opportunity) => void;
+  deletingResponseIds?: Set<string>;
 }
 
 export default function OpportunityList({
@@ -64,6 +66,8 @@ export default function OpportunityList({
   onSetShowHidden,
   selectedIds,
   onSelect,
+  onDeleteResponse,
+  deletingResponseIds,
 }: OpportunityListProps) {
   // Loading saved state
   if (loadingSaved) {
@@ -154,6 +158,8 @@ export default function OpportunityList({
             isMarkingReplied={!!opp.id && markingRepliedIds.has(opp.id)}
             isSelected={!!opp.id && !!selectedIds?.has(opp.id)}
             onSelect={onSelect}
+            onDeleteResponse={onDeleteResponse}
+            isDeletingResponse={!!opp.aiResponseId && !!deletingResponseIds?.has(opp.aiResponseId)}
           />
         ))}
       </div>

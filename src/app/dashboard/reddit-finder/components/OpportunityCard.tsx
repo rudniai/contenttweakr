@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import type { Opportunity } from './types';
+import type { Opportunity, AIModel } from './types';
 
 function ConfidenceBadge({ score }: { score: number }) {
   const color =
@@ -41,13 +41,15 @@ export interface OpportunityCardProps {
   isGenerating: boolean;
   isHiding: boolean;
   copiedIdx: number | null;
-  onGenerateResponse: (idx: number) => void;
+  onGenerateResponse: (idx: number, model?: AIModel) => void;
   onCopyToClipboard: (text: string, idx: number) => void;
   onHide: (opp: Opportunity) => void;
   onMarkReplied: (opp: Opportunity) => void;
   isMarkingReplied: boolean;
   isSelected?: boolean;
   onSelect?: (opp: Opportunity) => void;
+  onDeleteResponse?: (opp: Opportunity) => void;
+  isDeletingResponse?: boolean;
 }
 
 export default function OpportunityCard({
@@ -63,9 +65,13 @@ export default function OpportunityCard({
   isMarkingReplied,
   isSelected = false,
   onSelect,
+  onDeleteResponse,
+  isDeletingResponse = false,
 }: OpportunityCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('sonnet');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleEdit = () => {
     setEditedText(opp.aiResponse || '');
@@ -121,7 +127,12 @@ export default function OpportunityCard({
             aria-label={`Select ${opp.title}`}
           />
         )}
-        {opp.platform === 'hackernews' ? (
+        {opp.platform === 'producthunt' ? (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-900/50 text-pink-300 border border-pink-700/30">
+            <svg className="h-3 w-3" viewBox="0 0 40 40" fill="currentColor"><path d="M20 0C8.954 0 0 8.954 0 20s8.954 20 20 20 20-8.954 20-20S31.046 0 20 0zm1.2 24h-5.2v6h-4V10h9.2c4.418 0 8 3.582 8 7s-3.582 7-8 7zm-.2-10.4H16v6.8h5c1.878 0 3.4-1.522 3.4-3.4S22.878 13.6 21 13.6z"/></svg>
+            Product Hunt
+          </span>
+        ) : opp.platform === 'hackernews' ? (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-900/50 text-orange-300 border border-orange-700/30">
             <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0v16h16V0H0zm8.7 8.6v4.3H7.3V8.6L4 3h1.6L8 7l2.4-4H12L8.7 8.6z"/></svg>
             Hacker News
@@ -138,7 +149,7 @@ export default function OpportunityCard({
           </span>
         )}
         <span className="text-xs text-slate-500">
-          {opp.platform === 'hackernews' ? 'points' : 'upvotes'}: {opp.upvotes} &middot; {opp.comments} comments
+          {opp.platform === 'hackernews' ? 'points' : opp.platform === 'producthunt' ? 'votes' : 'upvotes'}: {opp.upvotes} &middot; {opp.comments} comments
         </span>
       </div>
 
@@ -157,9 +168,14 @@ export default function OpportunityCard({
         href={opp.url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 text-xs transition-colors mb-3 ${opp.platform === 'hackernews' ? 'text-orange-400/70 hover:text-orange-300' : 'text-blue-400/70 hover:text-blue-300'}`}
+        className={`inline-flex items-center gap-1 text-xs transition-colors mb-3 ${opp.platform === 'producthunt' ? 'text-pink-400/70 hover:text-pink-300' : opp.platform === 'hackernews' ? 'text-orange-400/70 hover:text-orange-300' : 'text-blue-400/70 hover:text-blue-300'}`}
       >
-        {opp.platform === 'hackernews' ? (
+        {opp.platform === 'producthunt' ? (
+          <>
+            <svg className="h-3 w-3" viewBox="0 0 40 40" fill="currentColor"><path d="M20 0C8.954 0 0 8.954 0 20s8.954 20 20 20 20-8.954 20-20S31.046 0 20 0zm1.2 24h-5.2v6h-4V10h9.2c4.418 0 8 3.582 8 7s-3.582 7-8 7zm-.2-10.4H16v6.8h5c1.878 0 3.4-1.522 3.4-3.4S22.878 13.6 21 13.6z"/></svg>
+            View on Product Hunt &rarr;
+          </>
+        ) : opp.platform === 'hackernews' ? (
           <>
             <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0v16h16V0H0zm8.7 8.6v4.3H7.3V8.6L4 3h1.6L8 7l2.4-4H12L8.7 8.6z"/></svg>
             View on Hacker News &rarr;
@@ -187,6 +203,15 @@ export default function OpportunityCard({
                 <span className="text-sm font-medium text-emerald-400">
                   Generated Response
                 </span>
+                {opp.aiResponseModel && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    opp.aiResponseModel === 'opus'
+                      ? 'bg-violet-900/50 text-violet-300 border border-violet-700/30'
+                      : 'bg-sky-900/50 text-sky-300 border border-sky-700/30'
+                  }`}>
+                    {opp.aiResponseModel === 'opus' ? 'Opus' : 'Sonnet'}
+                  </span>
+                )}
                 {isEdited && !isEditing && (
                   <span className="text-xs text-amber-400/70">(edited)</span>
                 )}
@@ -226,6 +251,51 @@ export default function OpportunityCard({
                     >
                       {copiedIdx === idx ? 'Copied!' : 'Copy'}
                     </Button>
+                    {onDeleteResponse && opp.aiResponseId && (
+                      showDeleteConfirm ? (
+                        <>
+                          <Button
+                            onClick={() => {
+                              onDeleteResponse(opp);
+                              setShowDeleteConfirm(false);
+                            }}
+                            disabled={isDeletingResponse}
+                            className="text-xs px-3 py-1 rounded-md bg-red-700 hover:bg-red-600 text-red-100 transition-colors"
+                          >
+                            {isDeletingResponse ? 'Deleting...' : 'Confirm'}
+                          </Button>
+                          <Button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          aria-label="Delete response"
+                          className="text-xs px-2 py-1 rounded-md bg-slate-700 hover:bg-red-700/70 text-slate-400 hover:text-red-200 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </Button>
+                      )
+                    )}
+                    {onDeleteResponse && opp.aiResponseId && !showDeleteConfirm && (
+                      <Button
+                        onClick={() => {
+                          onDeleteResponse(opp);
+                          // After delete completes, generate will be triggered by parent
+                        }}
+                        disabled={isDeletingResponse || isGenerating}
+                        aria-label="Regenerate response"
+                        className="text-xs px-3 py-1 rounded-md bg-blue-700 hover:bg-blue-600 text-blue-100 transition-colors"
+                      >
+                        Regenerate
+                      </Button>
+                    )}
                     {!opp.repliedAt && opp.id && (
                       <Button
                         onClick={() => onMarkReplied(opp)}
@@ -278,12 +348,22 @@ export default function OpportunityCard({
             </div>
           </div>
         ) : (
-          <Button
-            onClick={() => onGenerateResponse(idx)}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-          >
-            Generate Response
-          </Button>
+          <div className="flex gap-2">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value as AIModel)}
+              className="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              <option value="sonnet">Sonnet</option>
+              <option value="opus">Opus</option>
+            </select>
+            <Button
+              onClick={() => onGenerateResponse(idx, selectedModel)}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+            >
+              Generate Response
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
-export type Platform = 'reddit' | 'hackernews';
+export type Platform = 'reddit' | 'hackernews' | 'producthunt';
+export type AIModel = 'sonnet' | 'opus';
 
 export interface Opportunity {
   id?: string;
@@ -13,6 +14,8 @@ export interface Opportunity {
   hidden?: boolean;
   repliedAt?: string | null;
   aiResponse?: string;
+  aiResponseId?: string;
+  aiResponseModel?: AIModel;
   platform?: Platform;
 }
 

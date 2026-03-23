@@ -34,6 +34,7 @@ export async function GET(request: Request) {
         generated_responses (
           id,
           response_text,
+          model,
           created_at
         )
       `)
@@ -71,6 +72,8 @@ export async function GET(request: Request) {
       repliedAt: opp.replied_at || null,
       platform: opp.platform || 'reddit',
       aiResponse: opp.generated_responses?.[0]?.response_text || undefined,
+      aiResponseId: opp.generated_responses?.[0]?.id || undefined,
+      aiResponseModel: opp.generated_responses?.[0]?.model || undefined,
     }));
 
     return NextResponse.json({ success: true, opportunities: formatted });

@@ -18,6 +18,10 @@ export const generateResponseSchema = z.object({
     .string()
     .url('opportunityUrl must be a valid URL')
     .optional(),
+  model: z
+    .enum(['sonnet', 'opus'])
+    .optional()
+    .default('sonnet'),
 });
 
 export type GenerateResponseInput = z.infer<typeof generateResponseSchema>;

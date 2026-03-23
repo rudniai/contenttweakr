@@ -16,10 +16,16 @@ interface GenerateResponse {
 
 const anthropic = new Anthropic();
 
+const MODEL_MAP: Record<string, string> = {
+  sonnet: process.env.AI_MODEL || "claude-sonnet-4-5-20250514",
+  opus: "claude-opus-4-20250514",
+};
+
 async function generateResponse(
   title: string,
   context: string,
-  subreddit: string
+  subreddit: string,
+  model: string = "sonnet"
 ): Promise<string> {
   const sub = subreddit.replace(/^r\//, "");
 
@@ -40,7 +46,7 @@ Guidelines:
 - Start your response directly, no greeting or preamble`;
 
   const message = await anthropic.messages.create({
-    model: process.env.AI_MODEL || "claude-sonnet-4-5-20250514",
+    model: MODEL_MAP[model] || MODEL_MAP.sonnet,
     max_tokens: 300,
     messages: [
       {
@@ -102,12 +108,13 @@ export async function POST(
       );
     }
 
-    const { title, context, subreddit, opportunityUrl } = parsed.data;
+    const { title, context, subreddit, opportunityUrl, model } = parsed.data;
 
     // 3. Generate response via AI
-    const text = await generateResponse(title, context, subreddit);
+    const text = await generateResponse(title, context, subreddit, model);
 
     // 4. Save response to DB if we can find the opportunity
+    let responseId: string | undefined;
     if (opportunityUrl) {
       const { data: opp } = await supabase
         .from("opportunities")
@@ -117,16 +124,21 @@ export async function POST(
         .single();
 
       if (opp) {
-        const { error: saveError } = await supabase
+        const { data: saved, error: saveError } = await supabase
           .from("generated_responses")
           .insert({
             opportunity_id: opp.id,
             user_id: user.id,
             response_text: text,
-          });
+            model,
+          })
+          .select("id")
+          .single();
 
         if (saveError) {
           console.error("Error saving response to DB:", saveError);
+        } else {
+          responseId = saved?.id;
         }
       }
     }
@@ -135,6 +147,8 @@ export async function POST(
     return NextResponse.json({
       success: true,
       response: text,
+      model,
+      responseId,
     });
   } catch (error) {
     console.error("[generate-response] Unexpected error:", error);

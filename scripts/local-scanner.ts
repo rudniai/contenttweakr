@@ -26,6 +26,41 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// ── Heartbeat ────────────────────────────────────────────────────────────────
+const HEARTBEAT_INTERVAL_MS = 30_000; // 30 seconds
+
+async function updateHeartbeat(status: string, currentScanId?: string) {
+  try {
+    await supabase
+      .from('worker_state')
+      .upsert({
+        id: 'singleton',
+        last_heartbeat: new Date().toISOString(),
+        status,
+        current_scan_id: currentScanId || null,
+        updated_at: new Date().toISOString(),
+      });
+  } catch (err) {
+    console.error('Heartbeat update failed:', err);
+  }
+}
+
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
+function startHeartbeat() {
+  if (heartbeatTimer) return;
+  updateHeartbeat('running');
+  heartbeatTimer = setInterval(() => updateHeartbeat('running'), HEARTBEAT_INTERVAL_MS);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  updateHeartbeat('stopped');
+}
+
 const USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -173,8 +208,9 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
   const { id, user_id, hours } = scanRequest;
   console.log(`\n🔍 Executing scan ${id} (user=${user_id}, hours=${hours})`);
 
-  // Mark as processing
+  // Mark as processing + heartbeat
   await supabase.from('scan_requests').update({ status: 'processing' }).eq('id', id);
+  await updateHeartbeat('running', id);
 
   try {
     // Load user-specific settings
@@ -189,40 +225,45 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
 
     // ── Reddit scanning ──────────────────────────────────────────────────────
     for (const sub of settings.subreddits) {
-      const posts = await fetchSubredditPosts(sub, 100);
+      try {
+        const posts = await fetchSubredditPosts(sub, 100);
 
-      if (posts.length === 0) {
-        failed.push(sub);
-        console.log(`  [${sub}] No posts (likely blocked)`);
-      } else {
-        succeeded.push(sub);
-        console.log(`  [${sub}] ${posts.length} posts`);
-      }
-
-      for (const post of posts) {
-        if (post.created_utc < cutoffTime) continue;
-        if (!isRelevantWithKeywords(post.title + ' ' + (post.selftext || ''), settings.keywords)) continue;
-
-        const score = calculateRelevance(post.title, post.selftext);
-        if (score < 10) continue;
-
-        const sentimentScore = calculateSentiment(post.title, post.selftext || '');
-        if (settings.skip_toxic_threads && isToxic(post.title, post.selftext || '')) {
-          continue;
+        if (posts.length === 0) {
+          failed.push(sub);
+          console.log(`  [${sub}] No posts (likely blocked)`);
+        } else {
+          succeeded.push(sub);
+          console.log(`  [${sub}] ${posts.length} posts`);
         }
 
-        opportunities.push({
-          date: new Date(post.created_utc * 1000).toISOString(),
-          subreddit: post.subreddit,
-          title: post.title,
-          url: `https://reddit.com${post.permalink}`,
-          context: (post.selftext || '').substring(0, 500),
-          confidence: score,
-          upvotes: post.ups,
-          comments: post.num_comments,
-          sentiment_score: sentimentScore,
-          platform: 'reddit',
-        });
+        for (const post of posts) {
+          if (post.created_utc < cutoffTime) continue;
+          if (!isRelevantWithKeywords(post.title + ' ' + (post.selftext || ''), settings.keywords)) continue;
+
+          const score = calculateRelevance(post.title, post.selftext);
+          if (score < 10) continue;
+
+          const sentimentScore = calculateSentiment(post.title, post.selftext || '');
+          if (settings.skip_toxic_threads && isToxic(post.title, post.selftext || '')) {
+            continue;
+          }
+
+          opportunities.push({
+            date: new Date(post.created_utc * 1000).toISOString(),
+            subreddit: post.subreddit,
+            title: post.title,
+            url: `https://reddit.com${post.permalink}`,
+            context: (post.selftext || '').substring(0, 500),
+            confidence: score,
+            upvotes: post.ups,
+            comments: post.num_comments,
+            sentiment_score: sentimentScore,
+            platform: 'reddit',
+          });
+        }
+      } catch (err) {
+        failed.push(sub);
+        console.error(`  [${sub}] Error processing subreddit (continuing):`, err instanceof Error ? err.message : err);
       }
 
       await randomDelay(3000, 6000);
@@ -370,6 +411,18 @@ async function poll() {
 async function main() {
   console.log('🚀 Local scanner started — polling every 30s');
   console.log(`   Supabase: ${SUPABASE_URL}`);
+
+  // Start heartbeat
+  startHeartbeat();
+
+  // Graceful shutdown
+  const shutdown = () => {
+    console.log('\n🛑 Shutting down...');
+    stopHeartbeat();
+    process.exit(0);
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 
   // Run immediately on start, then loop
   await poll();
