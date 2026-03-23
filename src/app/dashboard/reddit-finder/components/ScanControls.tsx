@@ -36,7 +36,7 @@ function ScanProgressIndicator({ status, resultCount }: { status: string; result
   const currentIdx = stages.findIndex(s => s.key === status);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
       {stages.map((stage, idx) => {
         const isActive = stage.key === status;
         const isDone = idx < currentIdx;
@@ -45,12 +45,12 @@ function ScanProgressIndicator({ status, resultCount }: { status: string; result
         return (
           <div key={stage.key} className="flex items-center gap-2">
             {idx > 0 && (
-              <div className={`w-8 h-0.5 ${isDone ? 'bg-emerald-500' : isFuture ? 'bg-slate-700' : 'bg-blue-500'}`} />
+              <div className={`hidden sm:block w-8 h-0.5 ${isDone ? 'bg-emerald-500' : isFuture ? 'bg-slate-700' : 'bg-blue-500'}`} />
             )}
-            <div className={`flex items-center gap-1.5 text-sm ${
+            <div className={`flex items-center gap-1.5 text-xs sm:text-sm ${
               isActive ? 'text-blue-300 font-medium' : isDone ? 'text-emerald-400' : 'text-slate-600'
             }`}>
-              <span className="text-base">{isDone ? '✅' : stage.icon}</span>
+              <span className="text-sm sm:text-base">{isDone ? '✅' : stage.icon}</span>
               <span>{stage.label}</span>
             </div>
           </div>
