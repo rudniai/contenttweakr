@@ -57,19 +57,39 @@ export default function ScanHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadHistory() {
-      try {
-        const res = await fetch('/api/reddit/scan/history');
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to load scan history');
-        setScans(data.scans);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+  async function loadHistory() {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('[ScanHistory] Fetching /api/reddit/scan/history');
+      const res = await fetch('/api/reddit/scan/history');
+      console.log('[ScanHistory] Response status:', res.status);
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error('[ScanHistory] Non-JSON response:', contentType);
+        throw new Error(`Unexpected response (${res.status}). You may need to sign in again.`);
       }
+
+      const data = await res.json();
+      console.log('[ScanHistory] Data:', { success: data.success, scanCount: data.scans?.length });
+
+      if (!res.ok) throw new Error(data.error || 'Failed to load scan history');
+      if (!Array.isArray(data.scans)) {
+        console.error('[ScanHistory] data.scans is not an array:', data);
+        throw new Error('Invalid response format from server');
+      }
+
+      setScans(data.scans);
+    } catch (err) {
+      console.error('[ScanHistory] Error:', err);
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadHistory();
   }, []);
 
@@ -117,8 +137,15 @@ export default function ScanHistoryPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-900/20 border border-red-700/30 rounded-xl p-4 text-red-300">
-            {error}
+          <div className="bg-red-900/20 border border-red-700/30 rounded-xl p-6 text-center">
+            <div className="text-red-300 mb-1 font-medium">Failed to load scan history</div>
+            <p className="text-red-400/70 text-sm mb-4">{error}</p>
+            <button
+              onClick={loadHistory}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-200 rounded-lg transition-colors text-sm font-medium border border-red-700/30"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
