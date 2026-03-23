@@ -21,6 +21,12 @@ const MODEL_MAP: Record<string, string> = {
   opus: "claude-opus-4-20250514",
 };
 
+function getModelId(model: string): string {
+  const resolved = MODEL_MAP[model] || MODEL_MAP.sonnet;
+  console.log(`[generate-response] Using model: ${model} -> ${resolved}`);
+  return resolved;
+}
+
 async function generateResponse(
   title: string,
   context: string,
@@ -45,24 +51,31 @@ Guidelines:
 - Do not use markdown formatting
 - Start your response directly, no greeting or preamble`;
 
-  const message = await anthropic.messages.create({
-    model: MODEL_MAP[model] || MODEL_MAP.sonnet,
-    max_tokens: 300,
-    messages: [
-      {
-        role: "user",
-        content: "Generate a helpful response to this Reddit post/comment.",
-      },
-    ],
-    system: systemPrompt,
-  });
+  const modelId = getModelId(model);
 
-  const block = message.content[0];
-  if (block.type === "text") {
-    return block.text;
+  try {
+    const message = await anthropic.messages.create({
+      model: modelId,
+      max_tokens: 300,
+      messages: [
+        {
+          role: "user",
+          content: "Generate a helpful response to this Reddit post/comment.",
+        },
+      ],
+      system: systemPrompt,
+    });
+
+    const block = message.content[0];
+    if (block.type === "text") {
+      return block.text;
+    }
+
+    throw new Error("Unexpected response format from AI");
+  } catch (err) {
+    console.error(`[generate-response] Anthropic API error (model=${modelId}):`, err);
+    throw err;
   }
-
-  throw new Error("Unexpected response format from AI");
 }
 
 // --- Route handler ---
@@ -151,9 +164,10 @@ export async function POST(
       responseId,
     });
   } catch (error) {
-    console.error("[generate-response] Unexpected error:", error);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("[generate-response] Unexpected error:", errMsg, error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: `Generation failed: ${errMsg}` },
       { status: 500 }
     );
   }

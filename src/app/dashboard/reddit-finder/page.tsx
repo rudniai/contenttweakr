@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import type { Opportunity, ScanStatus } from './components/types';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ScanControls from './components/ScanControls';
@@ -461,12 +462,25 @@ function RedditFinderContent() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            FSA ContentTweakr
-          </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Find relevant Reddit posts where FreeSiteAudit can genuinely help
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                FSA ContentTweakr
+              </h1>
+              <p className="text-slate-400 text-sm sm:text-base">
+                Find relevant Reddit posts where FreeSiteAudit can genuinely help
+              </p>
+            </div>
+            <Link
+              href="/dashboard/history"
+              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800/70 border border-slate-700/50 text-slate-300 hover:text-white hover:border-slate-600 transition-colors text-sm font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              Scan History
+            </Link>
+          </div>
         </div>
 
         {scanIdFilter && (

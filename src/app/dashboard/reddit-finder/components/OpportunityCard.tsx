@@ -93,7 +93,7 @@ export default function OpportunityCard({
 
   return (
     <div
-      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border ${isSelected ? 'border-blue-500/70 ring-1 ring-blue-500/30' : 'border-slate-700/50'} p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative ${opp.hidden ? 'opacity-50' : ''} ${opp.repliedAt ? 'opacity-60' : ''}`}
+      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border ${isSelected ? 'border-blue-500/70 ring-1 ring-blue-500/30' : 'border-slate-700/50'} p-4 sm:p-6 hover:border-slate-600/50 transition-all duration-200 relative overflow-hidden min-w-0 ${opp.hidden ? 'opacity-50' : ''} ${opp.repliedAt ? 'opacity-60' : ''}`}
     >
       {/* Hide button */}
       {opp.id && (
@@ -160,7 +160,7 @@ export default function OpportunityCard({
         rel="noopener noreferrer"
         className="block group mb-1"
       >
-        <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors leading-snug">
+        <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors leading-snug break-words">
           {opp.title}
         </h3>
       </a>
@@ -168,7 +168,7 @@ export default function OpportunityCard({
         href={opp.url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 text-xs transition-colors mb-3 ${opp.platform === 'producthunt' ? 'text-pink-400/70 hover:text-pink-300' : opp.platform === 'hackernews' ? 'text-orange-400/70 hover:text-orange-300' : 'text-blue-400/70 hover:text-blue-300'}`}
+        className={`inline-flex items-center gap-1 text-xs transition-colors mb-3 break-all ${opp.platform === 'producthunt' ? 'text-pink-400/70 hover:text-pink-300' : opp.platform === 'hackernews' ? 'text-orange-400/70 hover:text-orange-300' : 'text-blue-400/70 hover:text-blue-300'}`}
       >
         {opp.platform === 'producthunt' ? (
           <>
@@ -188,7 +188,7 @@ export default function OpportunityCard({
       {/* Context */}
       {opp.context && (
         <div className="bg-slate-900/50 rounded-lg p-4 mb-4 border border-slate-700/30">
-          <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">
+          <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 break-words">
             {opp.context}
           </p>
         </div>
@@ -318,7 +318,7 @@ export default function OpportunityCard({
               />
             ) : (
               <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-4">
-                <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap break-words">
                   {displayText}
                 </p>
               </div>
