@@ -13,6 +13,7 @@ import { fetchHNStories } from '../src/lib/hn/client';
 import { isHNRelevant, calculateHNRelevance } from '../src/lib/hn/scorer';
 import { sendOpportunityNotification } from '../src/lib/email/send';
 import { calculateSentiment, isToxic } from '../src/lib/sentiment';
+import { isSemanticScoringEnabled, batchAnalyze, combineScores, detectCompetitors, type SemanticResult } from '../src/lib/reddit/semantic-scorer';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -312,6 +313,52 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         console.log(`  HN — ${stories.length} stories fetched, ${hnMatched} matched`);
       } catch (err) {
         console.error('  HN scanning error:', err);
+      }
+    }
+
+    // ── Semantic analysis (optional) ──────────────────────────────────────────
+    if (isSemanticScoringEnabled() && opportunities.length > 0) {
+      console.log(`  🧠 Semantic scoring enabled — analyzing ${Math.min(opportunities.length, 30)} candidates...`);
+
+      // Pre-sort by keyword score, take top 30 candidates for semantic analysis
+      opportunities.sort((a, b) => b.confidence - a.confidence);
+      const candidates = opportunities.slice(0, 30);
+
+      // Quick competitor check on remaining candidates (no API, just keyword matching)
+      // For posts with comments, we'd need to fetch them — for now use context
+      const batchItems = candidates.map((opp) => ({
+        id: opp.url,
+        title: opp.title,
+        body: opp.context,
+        comments: [] as string[], // Comments not fetched in current flow
+      }));
+
+      try {
+        const semanticResults = await batchAnalyze(batchItems);
+
+        // Re-score with combined keyword + semantic scores
+        for (const opp of candidates) {
+          const semantic = semanticResults.get(opp.url);
+          if (semantic) {
+            const originalKeywordScore = opp.confidence;
+            opp.confidence = combineScores(originalKeywordScore, semantic);
+
+            if (semantic.competitors_mentioned.length > 0) {
+              console.log(`    [competitor] "${opp.title.slice(0, 50)}..." — ${semantic.competitors_mentioned.join(', ')}`);
+            }
+          }
+        }
+
+        // Filter out zero-scored (multiple competitors)
+        const filtered = candidates.filter((opp) => opp.confidence > 0);
+        // Replace opportunities array with re-scored candidates
+        opportunities.length = 0;
+        opportunities.push(...filtered);
+
+        console.log(`  🧠 Semantic analysis complete — ${filtered.length}/${candidates.length} candidates passed`);
+      } catch (err) {
+        console.error('  🧠 Semantic batch analysis failed, using keyword scores:', err instanceof Error ? err.message : err);
+        // Fall through with original keyword scores
       }
     }
 
