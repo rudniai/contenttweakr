@@ -33,8 +33,8 @@
 | 17 | Email notifications for high-confidence opps | DONE | L | #16 | Resend integration, configurable threshold, test endpoint |
 | 18 | Sentiment analysis (skip toxic threads) | DONE | M | None | Keyword-based sentiment scoring, skip toxic threads setting |
 | 19 | Hacker News support | DONE | L | Architecture | HN API client, scorer, platform filter, settings toggle |
-| 20 | Product Hunt support | TODO | L | Architecture | New scanner module |
-| 21 | Analytics dashboard | TODO | L | Data collection | Track response rates, etc. |
+| 20 | Product Hunt support | BLOCKED | L | Architecture | Requires Product Hunt API approval + complex OAuth |
+| 21 | Analytics dashboard | DONE | L | Data collection | Server component, date range filter, platform/subreddit breakdown |
 | 22 | Multi-user / multi-tenant | TODO | XL | Auth overhaul | Billing, roles, quotas |
 | 23 | Direct Reddit posting (OAuth) | TODO | XL | Reddit app registration | Complex OAuth flow |
 | 24 | Test coverage (unit + integration) | DONE | L | None | 98 tests: scoring, config/validation, API routes, components |

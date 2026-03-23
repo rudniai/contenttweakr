@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard/reddit-finder', label: 'Scanner' },
   { href: '/dashboard/history', label: 'Scan History' },
+  { href: '/dashboard/analytics', label: 'Analytics' },
   { href: '/dashboard/settings', label: 'Settings' },
 ];
 
