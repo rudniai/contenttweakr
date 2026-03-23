@@ -18,12 +18,7 @@ npm install
 
 # Configure environment
 cp .env.example .env.local
-# Fill in:
-#   NEXT_PUBLIC_SUPABASE_URL
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   SUPABASE_SERVICE_ROLE_KEY
-#   ANTHROPIC_API_KEY
-#   AI_MODEL (optional, defaults to claude-sonnet-4-5-20250514)
+# Fill in all required values (see docs/DEPLOYMENT.md for full list)
 ```
 
 ### Run Database Migrations
@@ -77,27 +72,48 @@ Create a user in Supabase Auth dashboard (Authentication → Users → Add User)
 
 ---
 
-## How to Deploy
+## Deployment Checklist
 
-### Vercel (Frontend + API)
+Before deploying, verify:
 
-1. Connect repo to Vercel
-2. Set environment variables in Vercel dashboard:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `ANTHROPIC_API_KEY`
-   - `AI_MODEL`
-3. Deploy (auto-deploys on push to main)
+1. **Build passes locally**: `npm run build` completes without errors
+2. **Environment variables** are set in Vercel dashboard (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+3. **Database migrations** have been applied to the Supabase project
+4. **Supabase Auth** has at least one user created
+5. **Resend** domain is verified (if using email notifications)
+6. **CRON_SECRET** is set (required for scheduled scans)
 
-### Worker (Manual)
+---
 
-The worker must run separately — it cannot run on Vercel free tier due to timeouts.
+## How to Test Features
 
-**Options:**
-- Run `npm run scan` on your local machine while using the app
-- Deploy to a VPS (e.g., Railway, Fly.io, DigitalOcean) with a process manager
-- Use Vercel Pro tier (300s timeout) and trigger via `/api/reddit/scan/execute`
+### Reddit Opportunity Scanning
+1. Go to Dashboard → Reddit Finder
+2. Click "Scan Now" to trigger a scan
+3. Wait for results (check scan history for status)
+4. Verify opportunities appear with confidence scores
+
+### AI Response Generation
+1. Find an opportunity in Reddit Finder
+2. Click "Generate Response"
+3. Verify a contextual reply is generated
+
+### Email Notifications
+1. Go to Dashboard → Settings
+2. Enable email notifications and save
+3. Click "Send Test Email"
+4. Check your inbox for the test notification
+
+### Scheduled Scanning (Cron)
+1. Verify `CRON_SECRET` is set in Vercel env vars
+2. After deploy, check Vercel dashboard → Cron Jobs
+3. Cron runs every 6 hours (`0 */6 * * *`)
+4. Check scan history to confirm automated scans appear
+
+### Analytics Dashboard
+1. Run a few scans to generate data
+2. Go to Dashboard → Analytics
+3. Verify charts show scan history and opportunity trends
 
 ---
 
@@ -105,21 +121,13 @@ The worker must run separately — it cannot run on Vercel free tier due to time
 
 ### Functional
 - **Worker must run locally** — No cloud worker deployment. Scanning doesn't work without it.
-- **No scheduled scanning** — Must manually trigger each scan from the UI.
-- **No reply tracking** — Can't mark which opportunities you've already responded to.
-- **No copy button** — Must manually select and copy generated responses.
 - **Single user only** — Auth exists but no signup flow. Admin creates accounts manually.
 
 ### Technical
-- **Monolithic UI** — `reddit-finder/page.tsx` is ~800 lines. Hard to maintain.
-- **Duplicate constants** — Subreddit and keyword lists exist in both `local-scanner.ts` and `scan/execute/route.ts`.
-- **Dead code** — `/api/reddit/scan/request` and `/api/reddit/opportunities` routes are unused.
-- **No tests** — Zero test coverage.
-- **No input validation** — API routes don't validate/sanitize inputs.
-- **No error boundaries** — Unhandled errors crash the page.
-- **Unused dependency** — `openai` package installed but not used.
+- **Monolithic UI** — `reddit-finder/page.tsx` is large. Consider splitting into components.
+- **In-memory rate limiting** — Resets on redeploy. Use Upstash Redis for persistence.
+- **No test coverage** — Zero automated tests.
 
 ### Data
 - **No deduplication logic** — Relies on DB UNIQUE constraint; duplicate inserts log errors.
 - **No `updated_at` columns** — Can't track when records were last modified.
-- **No scan-to-opportunity link** — Opportunities don't reference which scan found them.

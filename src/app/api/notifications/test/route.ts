@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { sendOpportunityNotification } from '@/lib/email/send';
 import { applyRateLimit } from '@/lib/ratelimit';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     const supabase = createClient();
