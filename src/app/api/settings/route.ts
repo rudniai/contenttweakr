@@ -14,7 +14,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_settings')
-      .select('subreddits, keywords')
+      .select('subreddits, keywords, scan_frequency')
       .eq('user_id', user.id)
       .single();
 
@@ -26,6 +26,7 @@ export async function GET() {
     return NextResponse.json({
       subreddits: data?.subreddits ?? SUBREDDITS,
       keywords: data?.keywords ?? KEYWORDS,
+      scan_frequency: data?.scan_frequency ?? 'disabled',
       isCustom: {
         subreddits: data?.subreddits != null,
         keywords: data?.keywords != null,
@@ -56,15 +57,20 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { subreddits, keywords } = parsed.data;
+    const { subreddits, keywords, scan_frequency } = parsed.data;
+
+    const upsertData: Record<string, unknown> = {
+      user_id: user.id,
+      subreddits,
+      keywords,
+    };
+    if (scan_frequency !== undefined) {
+      upsertData.scan_frequency = scan_frequency;
+    }
 
     const { error } = await supabase
       .from('user_settings')
-      .upsert({
-        user_id: user.id,
-        subreddits,
-        keywords,
-      }, { onConflict: 'user_id' });
+      .upsert(upsertData, { onConflict: 'user_id' });
 
     if (error) {
       console.error('Error saving settings:', error);

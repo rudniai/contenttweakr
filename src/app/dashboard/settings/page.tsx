@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback, KeyboardEvent } from 'react';
 import { SUBREDDITS, KEYWORDS } from '@/lib/reddit/config';
+import { SCAN_FREQUENCIES, SCAN_FREQUENCY_LABELS, type ScanFrequency } from '@/lib/validations/settings';
 
 export default function SettingsPage() {
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [scanFrequency, setScanFrequency] = useState<ScanFrequency>('disabled');
   const [isCustom, setIsCustom] = useState({ subreddits: false, keywords: false });
   const [subredditInput, setSubredditInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
@@ -20,6 +22,7 @@ export default function SettingsPage() {
       const data = await res.json();
       setSubreddits(data.subreddits);
       setKeywords(data.keywords);
+      setScanFrequency(data.scan_frequency ?? 'disabled');
       setIsCustom(data.isCustom);
     } catch {
       setMessage({ type: 'error', text: 'Failed to load settings' });
@@ -39,7 +42,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subreddits, keywords }),
+        body: JSON.stringify({ subreddits, keywords, scan_frequency: scanFrequency }),
       });
       if (!res.ok) throw new Error('Failed to save');
       setIsCustom({ subreddits: true, keywords: true });
@@ -63,6 +66,7 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Failed to reset');
       setSubreddits(SUBREDDITS);
       setKeywords(KEYWORDS);
+      setScanFrequency('disabled');
       setIsCustom({ subreddits: false, keywords: false });
       setMessage({ type: 'success', text: 'Reset to defaults' });
     } catch {
@@ -188,6 +192,30 @@ export default function SettingsPage() {
             placeholder="Add subreddit (press Enter)"
             className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
           />
+        </div>
+      </section>
+
+      {/* Scan Frequency */}
+      <section className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-white">Scheduled Scanning</h2>
+        </div>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+          <p className="text-sm text-slate-400 mb-3">
+            Automatically scan for new opportunities on a schedule. The local scanner worker must be running to process scans.
+          </p>
+          <select
+            value={scanFrequency}
+            onChange={(e) => setScanFrequency(e.target.value as ScanFrequency)}
+            disabled={saving}
+            className="w-full sm:w-auto bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
+          >
+            {SCAN_FREQUENCIES.map((freq) => (
+              <option key={freq} value={freq}>
+                {SCAN_FREQUENCY_LABELS[freq]}
+              </option>
+            ))}
+          </select>
         </div>
       </section>
 

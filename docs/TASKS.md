@@ -29,7 +29,7 @@
 
 | # | Task | Status | Effort | Dependencies | Notes |
 |---|------|--------|--------|--------------|-------|
-| 16 | Scheduled scanning (cron) | TODO | L | Worker hosting | Vercel cron or external |
+| 16 | Scheduled scanning (cron) | DONE | L | Worker hosting | Vercel cron every 6h, user-configurable frequency |
 | 17 | Email notifications for high-confidence opps | TODO | L | #16 | Email provider needed |
 | 18 | Sentiment analysis (skip toxic threads) | TODO | M | None | Claude or rule-based |
 | 19 | Hacker News support | TODO | L | Architecture | New scanner module |
