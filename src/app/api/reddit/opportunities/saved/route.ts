@@ -5,15 +5,28 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    console.log('[saved] Auth check:', { userId: user?.id, authError: authError?.message });
 
     if (!user) {
+      console.log('[saved] No user found, returning 401');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const includeHidden = searchParams.get('includeHidden') === 'true';
     const scanId = searchParams.get('scan_id');
+
+    console.log('[saved] Query params:', { includeHidden, scanId, userId: user.id });
+
+    // First: raw count check to see if ANY opportunities exist for this user
+    const { count, error: countError } = await supabase
+      .from('opportunities')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    console.log('[saved] Total opportunities for user:', { count, countError: countError?.message });
 
     // Fetch opportunities with their latest response
     let query = supabase
@@ -52,8 +65,15 @@ export async function GET(request: Request) {
 
     const { data: opportunities, error } = await query;
 
+    console.log('[saved] Query result:', {
+      error: error?.message,
+      count: opportunities?.length,
+      firstTitle: opportunities?.[0]?.title,
+      hiddenValues: opportunities?.map(o => o.hidden),
+    });
+
     if (error) {
-      console.error('Error loading opportunities:', error);
+      console.error('[saved] Error loading opportunities:', error);
       return NextResponse.json({ error: 'Failed to load opportunities' }, { status: 500 });
     }
 
@@ -76,9 +96,11 @@ export async function GET(request: Request) {
       aiResponseModel: opp.generated_responses?.[0]?.model || undefined,
     }));
 
+    console.log('[saved] Returning', formatted.length, 'formatted opportunities');
+
     return NextResponse.json({ success: true, opportunities: formatted });
   } catch (error) {
-    console.error('Load opportunities error:', error);
+    console.error('[saved] Load opportunities error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

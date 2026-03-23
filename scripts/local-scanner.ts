@@ -320,6 +320,8 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
     const top20 = opportunities.slice(0, 20);
 
     // Save opportunities to DB
+    console.log(`  Inserting ${top20.length} opportunities for user ${user_id}, scan ${id}`);
+
     if (top20.length > 0) {
       const rows = top20.map((opp) => ({
         user_id,
@@ -336,13 +338,28 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         scan_id: id,
       }));
 
-      const { error: upsertError } = await supabase
+      console.log('  First row:', JSON.stringify(rows[0]));
+
+      const { data: upsertData, error: upsertError } = await supabase
         .from('opportunities')
-        .upsert(rows, { onConflict: 'user_id,url' });
+        .upsert(rows, { onConflict: 'user_id,url' })
+        .select('id, title');
 
       if (upsertError) {
         console.error('  Error upserting opportunities:', upsertError);
+        console.error('  Error details:', upsertError.details, upsertError.code);
+      } else {
+        console.log(`  Upserted ${upsertData?.length} rows. First:`, upsertData?.[0]);
       }
+
+      // Verify count
+      const { count } = await supabase
+        .from('opportunities')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user_id);
+      console.log(`  Verification: ${count} total opportunities for user after upsert`);
+    } else {
+      console.log('  No opportunities to insert');
     }
 
     // Mark completed

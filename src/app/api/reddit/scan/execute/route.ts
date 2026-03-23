@@ -276,6 +276,9 @@ export async function POST(request: NextRequest) {
     const top20 = opportunities.slice(0, 20);
 
     // Save opportunities to DB
+    console.log('[execute] Total opportunities found:', opportunities.length, '-> top20:', top20.length);
+    console.log('[execute] user_id:', user_id, 'scan_request_id:', scan_request_id);
+
     if (top20.length > 0) {
       const rows = top20.map((opp) => ({
         user_id,
@@ -292,14 +295,34 @@ export async function POST(request: NextRequest) {
         scan_id: scan_request_id,
       }));
 
-      const { error: upsertError } = await supabase
+      console.log('[execute] Upserting', rows.length, 'rows. First row:', JSON.stringify(rows[0]));
+
+      const { data: upsertData, error: upsertError } = await supabase
         .from('opportunities')
-        .upsert(rows, { onConflict: 'user_id,url' });
+        .upsert(rows, { onConflict: 'user_id,url' })
+        .select('id, title');
+
+      console.log('[execute] Upsert result:', {
+        error: upsertError?.message,
+        errorDetails: upsertError?.details,
+        errorCode: upsertError?.code,
+        insertedCount: upsertData?.length,
+        firstInserted: upsertData?.[0],
+      });
 
       if (upsertError) {
-        console.error('Error upserting opportunities:', upsertError);
+        console.error('[execute] Error upserting opportunities:', upsertError);
       }
+    } else {
+      console.log('[execute] No opportunities to insert');
     }
+
+    // Verify: count opportunities for this user after insert
+    const { count: verifyCount } = await supabase
+      .from('opportunities')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user_id);
+    console.log('[execute] Verification - total opportunities for user after insert:', verifyCount);
 
     // Mark scan as completed
     await supabase

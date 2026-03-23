@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
 
     const { hours } = parsed.data;
 
+    console.log('[trigger] Creating scan request for user:', user.id, 'hours:', hours);
+
     // Create scan request in DB
     const { data, error } = await supabase
       .from('scan_requests')
@@ -39,9 +41,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating scan request:', error);
+      console.error('[trigger] Error creating scan request:', error);
       return NextResponse.json({ error: 'Failed to create scan request' }, { status: 500 });
     }
+
+    console.log('[trigger] Scan request created:', data.id);
 
     // Local worker will pick up pending scan_requests and execute them
     return NextResponse.json({ id: data.id, status: 'pending' });

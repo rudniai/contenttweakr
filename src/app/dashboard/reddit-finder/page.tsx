@@ -87,16 +87,25 @@ function RedditFinderContent() {
       const url = scanIdFilter
         ? `/api/reddit/opportunities/saved?scan_id=${scanIdFilter}&includeHidden=true`
         : '/api/reddit/opportunities/saved';
+      console.log('[reloadOpportunities] Fetching:', url);
       const res = await fetch(url);
       const data = await res.json();
+      console.log('[reloadOpportunities] Response:', {
+        ok: res.ok,
+        status: res.status,
+        opportunitiesCount: data.opportunities?.length,
+        error: data.error,
+        raw: JSON.stringify(data).substring(0, 500),
+      });
       if (res.ok && data.opportunities?.length > 0) {
         setOpportunities(data.opportunities);
         setHasScanned(true);
       } else {
+        console.log('[reloadOpportunities] No opportunities found or error, clearing list');
         setOpportunities([]);
       }
     } catch (err) {
-      console.error('Failed to load opportunities:', err);
+      console.error('[reloadOpportunities] Failed to load opportunities:', err);
     }
   }, [scanIdFilter]);
 
@@ -111,6 +120,7 @@ function RedditFinderContent() {
         setScanStatus(data);
 
         if (data.status === 'completed') {
+          console.log('[poll] Scan completed, result_count:', data.result_count, '- reloading opportunities');
           stopPolling();
           setLoading(false);
           setHasScanned(true);
@@ -137,11 +147,15 @@ function RedditFinderContent() {
 
   // Load saved opportunities from DB on mount or when scan_id filter changes
   useEffect(() => {
+    console.log('[mount] Loading opportunities, scanIdFilter:', scanIdFilter);
     setLoadingSaved(true);
     setOpportunities([]);
     setSelectedIds(new Set());
 
-    reloadOpportunities().finally(() => setLoadingSaved(false));
+    reloadOpportunities().finally(() => {
+      console.log('[mount] Load complete');
+      setLoadingSaved(false);
+    });
   }, [reloadOpportunities]);
 
   const findOpportunities = async () => {
