@@ -81,6 +81,25 @@ function RedditFinderContent() {
     }
   }, []);
 
+  // Reload all opportunities from DB (cumulative view)
+  const reloadOpportunities = useCallback(async () => {
+    try {
+      const url = scanIdFilter
+        ? `/api/reddit/opportunities/saved?scan_id=${scanIdFilter}&includeHidden=true`
+        : '/api/reddit/opportunities/saved';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (res.ok && data.opportunities?.length > 0) {
+        setOpportunities(data.opportunities);
+        setHasScanned(true);
+      } else {
+        setOpportunities([]);
+      }
+    } catch (err) {
+      console.error('Failed to load opportunities:', err);
+    }
+  }, [scanIdFilter]);
+
   // Poll scan status
   useEffect(() => {
     if (!scanRequestId) return;
@@ -95,24 +114,9 @@ function RedditFinderContent() {
           stopPolling();
           setLoading(false);
           setHasScanned(true);
-
-          if (data.opportunities && data.opportunities.length > 0) {
-            setOpportunities(data.opportunities.map(opp => ({
-              id: opp.id,
-              date: opp.date || '',
-              subreddit: opp.subreddit,
-              title: opp.title,
-              url: opp.url,
-              context: opp.context || '',
-              confidence: opp.confidence,
-              upvotes: opp.upvotes,
-              comments: opp.comments,
-              platform: opp.platform || 'reddit',
-            })));
-          } else {
-            setOpportunities([]);
-          }
           setScanRequestId(null);
+          // Reload all opportunities from DB to get cumulative results with full data
+          await reloadOpportunities();
         } else if (data.status === 'failed') {
           stopPolling();
           setLoading(false);
@@ -129,7 +133,7 @@ function RedditFinderContent() {
     pollIntervalRef.current = setInterval(poll, 3000);
 
     return () => stopPolling();
-  }, [scanRequestId, stopPolling]);
+  }, [scanRequestId, stopPolling, reloadOpportunities]);
 
   // Load saved opportunities from DB on mount or when scan_id filter changes
   useEffect(() => {
@@ -137,25 +141,8 @@ function RedditFinderContent() {
     setOpportunities([]);
     setSelectedIds(new Set());
 
-    async function loadSaved() {
-      try {
-        const url = scanIdFilter
-          ? `/api/reddit/opportunities/saved?scan_id=${scanIdFilter}&includeHidden=true`
-          : '/api/reddit/opportunities/saved';
-        const res = await fetch(url);
-        const data = await res.json();
-        if (res.ok && data.opportunities?.length > 0) {
-          setOpportunities(data.opportunities);
-          setHasScanned(true);
-        }
-      } catch (err) {
-        console.error('Failed to load saved opportunities:', err);
-      } finally {
-        setLoadingSaved(false);
-      }
-    }
-    loadSaved();
-  }, [scanIdFilter]);
+    reloadOpportunities().finally(() => setLoadingSaved(false));
+  }, [reloadOpportunities]);
 
   const findOpportunities = async () => {
     setLoading(true);
