@@ -17,7 +17,7 @@ interface GenerateResponse {
 const anthropic = new Anthropic();
 
 const MODEL_MAP: Record<string, string> = {
-  sonnet: process.env.AI_MODEL || "claude-sonnet-4-5-20250514",
+  sonnet: process.env.AI_MODEL || "claude-sonnet-4-20250514",
   opus: "claude-opus-4-20250514",
 };
 

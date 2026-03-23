@@ -27,7 +27,7 @@ Set these in **Vercel Dashboard → Settings → Environment Variables**:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AI_MODEL` | Claude model to use | `claude-sonnet-4-5-20250514` |
+| `AI_MODEL` | Claude model to use | `claude-sonnet-4-20250514` |
 | `CRON_SECRET` | Secret to authenticate cron requests | *(required for scheduled scans)* |
 | `RESEND_API_KEY` | Resend API key for email notifications | *(notifications disabled if not set)* |
 | `RESEND_FROM_EMAIL` | Sender email address | `ContentTweakr <notifications@contenttweakr.com>` |

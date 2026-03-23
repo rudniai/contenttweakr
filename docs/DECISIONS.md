@@ -51,7 +51,7 @@
 
 ## ADR-4: Claude Sonnet for Response Generation
 
-**Decision:** Use Claude Sonnet 4.5 (`claude-sonnet-4-5-20250514`) for generating Reddit responses, configurable via `AI_MODEL` env var.
+**Decision:** Use Claude Sonnet 4 (`claude-sonnet-4-20250514`) for generating Reddit responses, configurable via `AI_MODEL` env var.
 
 **Rationale:** Sonnet balances quality and cost. Opus available for higher quality if needed.
 
