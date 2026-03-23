@@ -10,6 +10,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUBREDDITS as DEFAULT_SUBREDDITS, KEYWORDS as DEFAULT_KEYWORDS, QUESTION_PATTERNS, calculateRelevance } from '../src/lib/reddit/config';
 import { sendOpportunityNotification } from '../src/lib/email/send';
+import { calculateSentiment, isToxic } from '../src/lib/sentiment';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -53,6 +54,7 @@ interface Opportunity {
   confidence: number;
   upvotes: number;
   comments: number;
+  sentiment_score: number;
 }
 
 function randomUserAgent(): string {
@@ -114,12 +116,13 @@ interface UserSettings {
   keywords: string[];
   email_notifications: boolean;
   notification_threshold: number;
+  skip_toxic_threads: boolean;
 }
 
 async function getUserSettings(userId: string): Promise<UserSettings> {
   const { data, error } = await supabase
     .from('user_settings')
-    .select('subreddits, keywords, email_notifications, notification_threshold')
+    .select('subreddits, keywords, email_notifications, notification_threshold, skip_toxic_threads')
     .eq('user_id', userId)
     .single();
 
@@ -129,6 +132,7 @@ async function getUserSettings(userId: string): Promise<UserSettings> {
       keywords: DEFAULT_KEYWORDS,
       email_notifications: false,
       notification_threshold: 70,
+      skip_toxic_threads: true,
     };
   }
 
@@ -137,6 +141,7 @@ async function getUserSettings(userId: string): Promise<UserSettings> {
     keywords: data.keywords ?? DEFAULT_KEYWORDS,
     email_notifications: data.email_notifications ?? false,
     notification_threshold: data.notification_threshold ?? 70,
+    skip_toxic_threads: data.skip_toxic_threads ?? true,
   };
 }
 
@@ -191,6 +196,11 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         const score = calculateRelevance(post.title, post.selftext);
         if (score < 10) continue;
 
+        const sentimentScore = calculateSentiment(post.title, post.selftext || '');
+        if (settings.skip_toxic_threads && isToxic(post.title, post.selftext || '')) {
+          continue;
+        }
+
         opportunities.push({
           date: new Date(post.created_utc * 1000).toISOString(),
           subreddit: post.subreddit,
@@ -200,6 +210,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
           confidence: score,
           upvotes: post.ups,
           comments: post.num_comments,
+          sentiment_score: sentimentScore,
         });
       }
 
@@ -223,6 +234,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         confidence: opp.confidence,
         upvotes: opp.upvotes,
         comments: opp.comments,
+        sentiment_score: opp.sentiment_score,
         scanned_at: new Date().toISOString(),
         scan_id: id,
       }));

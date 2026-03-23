@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { SUBREDDITS, isRelevant, calculateRelevance } from '@/lib/reddit/config';
+import { calculateSentiment, isToxic } from '@/lib/sentiment';
 
 interface RedditPost {
   id: string;
@@ -23,6 +24,7 @@ interface Opportunity {
   confidence: number;
   upvotes: number;
   comments: number;
+  sentiment_score: number;
 }
 
 const USER_AGENTS = [
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { scan_request_id, user_id, hours = 24 } = body;
+  const { scan_request_id, user_id, hours = 24, skip_toxic_threads = true } = body;
 
   if (!scan_request_id || !user_id) {
     return NextResponse.json(
@@ -154,6 +156,11 @@ export async function POST(request: NextRequest) {
           const score = calculateRelevance(post.title, post.selftext);
           if (score < 10) continue;
 
+          const sentimentScore = calculateSentiment(post.title, post.selftext || '');
+          if (skip_toxic_threads && isToxic(post.title, post.selftext || '')) {
+            continue;
+          }
+
           opportunities.push({
             date: new Date(post.created_utc * 1000).toISOString(),
             subreddit: post.subreddit,
@@ -163,6 +170,7 @@ export async function POST(request: NextRequest) {
             confidence: score,
             upvotes: post.ups,
             comments: post.num_comments,
+            sentiment_score: sentimentScore,
           });
         }
 
@@ -192,6 +200,7 @@ export async function POST(request: NextRequest) {
         confidence: opp.confidence,
         upvotes: opp.upvotes,
         comments: opp.comments,
+        sentiment_score: opp.sentiment_score,
         scanned_at: new Date().toISOString(),
         scan_id: scan_request_id,
       }));

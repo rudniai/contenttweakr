@@ -14,7 +14,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_settings')
-      .select('subreddits, keywords, scan_frequency, email_notifications, notification_threshold')
+      .select('subreddits, keywords, scan_frequency, email_notifications, notification_threshold, skip_toxic_threads')
       .eq('user_id', user.id)
       .single();
 
@@ -29,6 +29,7 @@ export async function GET() {
       scan_frequency: data?.scan_frequency ?? 'disabled',
       email_notifications: data?.email_notifications ?? false,
       notification_threshold: data?.notification_threshold ?? 70,
+      skip_toxic_threads: data?.skip_toxic_threads ?? true,
       isCustom: {
         subreddits: data?.subreddits != null,
         keywords: data?.keywords != null,
@@ -59,7 +60,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { subreddits, keywords, scan_frequency, email_notifications, notification_threshold } = parsed.data;
+    const { subreddits, keywords, scan_frequency, email_notifications, notification_threshold, skip_toxic_threads } = parsed.data;
 
     const upsertData: Record<string, unknown> = {
       user_id: user.id,
@@ -74,6 +75,9 @@ export async function PUT(request: Request) {
     }
     if (notification_threshold !== undefined) {
       upsertData.notification_threshold = notification_threshold;
+    }
+    if (skip_toxic_threads !== undefined) {
+      upsertData.skip_toxic_threads = skip_toxic_threads;
     }
 
     const { error } = await supabase

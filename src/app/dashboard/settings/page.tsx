@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [scanFrequency, setScanFrequency] = useState<ScanFrequency>('disabled');
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [notificationThreshold, setNotificationThreshold] = useState(70);
+  const [skipToxicThreads, setSkipToxicThreads] = useState(true);
   const [isCustom, setIsCustom] = useState({ subreddits: false, keywords: false });
   const [subredditInput, setSubredditInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
@@ -28,6 +29,7 @@ export default function SettingsPage() {
       setScanFrequency(data.scan_frequency ?? 'disabled');
       setEmailNotifications(data.email_notifications ?? false);
       setNotificationThreshold(data.notification_threshold ?? 70);
+      setSkipToxicThreads(data.skip_toxic_threads ?? true);
       setIsCustom(data.isCustom);
     } catch {
       setMessage({ type: 'error', text: 'Failed to load settings' });
@@ -53,6 +55,7 @@ export default function SettingsPage() {
           scan_frequency: scanFrequency,
           email_notifications: emailNotifications,
           notification_threshold: notificationThreshold,
+          skip_toxic_threads: skipToxicThreads,
         }),
       });
       if (!res.ok) throw new Error('Failed to save');
@@ -308,6 +311,38 @@ export default function SettingsPage() {
               </div>
             </>
           )}
+        </div>
+      </section>
+
+      {/* Sentiment Filter */}
+      <section className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-white">Content Filtering</h2>
+        </div>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white font-medium">Skip toxic threads</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Automatically filter out hostile or toxic threads during scanning
+              </p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={skipToxicThreads}
+              onClick={() => setSkipToxicThreads(!skipToxicThreads)}
+              disabled={saving}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 ${
+                skipToxicThreads ? 'bg-blue-600' : 'bg-slate-700'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                  skipToxicThreads ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </section>
 

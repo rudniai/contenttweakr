@@ -20,6 +20,7 @@ export const updateSettingsSchema = z.object({
   scan_frequency: z.enum(SCAN_FREQUENCIES).optional(),
   email_notifications: z.boolean().optional(),
   notification_threshold: z.number().int().min(0).max(100).optional(),
+  skip_toxic_threads: z.boolean().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
