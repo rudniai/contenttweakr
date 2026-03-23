@@ -131,8 +131,12 @@ function RedditFinderContent() {
     return () => stopPolling();
   }, [scanRequestId, stopPolling]);
 
-  // Load saved opportunities from DB on mount
+  // Load saved opportunities from DB on mount or when scan_id filter changes
   useEffect(() => {
+    setLoadingSaved(true);
+    setOpportunities([]);
+    setSelectedIds(new Set());
+
     async function loadSaved() {
       try {
         const url = scanIdFilter
