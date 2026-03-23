@@ -23,6 +23,7 @@ export const updateSettingsSchema = z.object({
   skip_toxic_threads: z.boolean().optional(),
   hn_enabled: z.boolean().optional(),
   hn_keywords: tagArray.nullable().optional(),
+  ph_enabled: z.boolean().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;

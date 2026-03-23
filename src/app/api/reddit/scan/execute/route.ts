@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { SUBREDDITS, KEYWORDS, isRelevant, calculateRelevance } from '@/lib/reddit/config';
 import { fetchHNStories } from '@/lib/hn/client';
 import { isHNRelevant, calculateHNRelevance } from '@/lib/hn/scorer';
+import { fetchPHPosts } from '@/lib/ph/client';
+import { isPHRelevant, calculatePHRelevance } from '@/lib/ph/scorer';
 import { calculateSentiment, isToxic } from '@/lib/sentiment';
 
 interface RedditPost {
@@ -27,7 +29,7 @@ interface Opportunity {
   upvotes: number;
   comments: number;
   sentiment_score: number;
-  platform: 'reddit' | 'hackernews';
+  platform: 'reddit' | 'hackernews' | 'producthunt';
 }
 
 const USER_AGENTS = [
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { scan_request_id, user_id, hours = 24, skip_toxic_threads = true, hn_enabled = false } = body;
+  const { scan_request_id, user_id, hours = 24, skip_toxic_threads = true, hn_enabled = false, ph_enabled = false } = body;
 
   if (!scan_request_id || !user_id) {
     return NextResponse.json(
@@ -226,6 +228,46 @@ export async function POST(request: NextRequest) {
         console.log(`HN: ${stories.length} stories fetched, ${hnMatched} matched`);
       } catch (err) {
         console.error('HN scanning error:', err);
+      }
+    }
+
+    // ── Product Hunt scanning ───────────────────────────────────────────────
+    if (ph_enabled) {
+      console.log('Scanning Product Hunt...');
+      try {
+        const posts = await fetchPHPosts(50, hours);
+        let phMatched = 0;
+
+        for (const post of posts) {
+          if (!isPHRelevant(post.name, post.tagline, post.description || '')) continue;
+
+          const score = calculatePHRelevance(post.name, post.tagline, post.description || '');
+          if (score < 10) continue;
+
+          const combined = `${post.name} ${post.tagline}`;
+          const sentimentScore = calculateSentiment(combined, post.description || '');
+          if (skip_toxic_threads && isToxic(combined, post.description || '')) {
+            continue;
+          }
+
+          phMatched++;
+          opportunities.push({
+            date: post.createdAt,
+            subreddit: 'producthunt',
+            title: `${post.name} - ${post.tagline}`,
+            url: post.url,
+            context: (post.description || '').substring(0, 500),
+            confidence: score,
+            upvotes: post.votesCount,
+            comments: post.commentsCount,
+            sentiment_score: sentimentScore,
+            platform: 'producthunt',
+          });
+        }
+
+        console.log(`PH: ${posts.length} posts fetched, ${phMatched} matched`);
+      } catch (err) {
+        console.error('PH scanning error:', err);
       }
     }
 

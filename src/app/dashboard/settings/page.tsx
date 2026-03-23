@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [hnEnabled, setHnEnabled] = useState(false);
   const [hnKeywords, setHnKeywords] = useState<string[]>([]);
   const [hnKeywordInput, setHnKeywordInput] = useState('');
+  const [phEnabled, setPhEnabled] = useState(false);
   const [isCustom, setIsCustom] = useState({ subreddits: false, keywords: false });
   const [subredditInput, setSubredditInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       setSkipToxicThreads(data.skip_toxic_threads ?? true);
       setHnEnabled(data.hn_enabled ?? false);
       setHnKeywords(data.hn_keywords ?? data.keywords ?? []);
+      setPhEnabled(data.ph_enabled ?? false);
       setIsCustom(data.isCustom);
     } catch {
       setMessage({ type: 'error', text: 'Failed to load settings' });
@@ -63,6 +65,7 @@ export default function SettingsPage() {
           skip_toxic_threads: skipToxicThreads,
           hn_enabled: hnEnabled,
           hn_keywords: hnKeywords.length > 0 ? hnKeywords : null,
+          ph_enabled: phEnabled,
         }),
       });
       if (!res.ok) throw new Error('Failed to save');
@@ -416,6 +419,47 @@ export default function SettingsPage() {
                 placeholder="Add HN keyword (press Enter)"
                 className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
               />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Product Hunt */}
+      <section className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-white">Product Hunt</h2>
+        </div>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white font-medium">Enable Product Hunt scanning</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Scan top Product Hunt posts and discussions for opportunities
+              </p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={phEnabled}
+              onClick={() => setPhEnabled(!phEnabled)}
+              disabled={saving}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 ${
+                phEnabled ? 'bg-pink-600' : 'bg-slate-700'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                  phEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {phEnabled && (
+            <div className="border-t border-slate-800 pt-4">
+              <p className="text-xs text-slate-500">
+                Requires a <code className="text-pink-400">PRODUCT_HUNT_API_KEY</code> environment variable.
+                Get one from the Product Hunt API dashboard. Scanning will be skipped if no key is configured.
+              </p>
             </div>
           )}
         </div>

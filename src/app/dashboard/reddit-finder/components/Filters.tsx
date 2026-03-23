@@ -15,6 +15,7 @@ export interface FiltersProps {
   platformFilter: PlatformFilter;
   onSetPlatformFilter: (filter: PlatformFilter) => void;
   hasHN: boolean;
+  hasPH: boolean;
 }
 
 export default function Filters({
@@ -28,6 +29,7 @@ export default function Filters({
   platformFilter,
   onSetPlatformFilter,
   hasHN,
+  hasPH,
 }: FiltersProps) {
   if (visibleCount === 0) return null;
 
@@ -39,19 +41,19 @@ export default function Filters({
           {visibleCount === 1 ? 'y' : 'ies'}
           {showHidden && hiddenCount > 0 && ` (${hiddenCount} hidden)`}
         </span>
-        {hasHN && (
+        {(hasHN || hasPH) && (
           <div className="flex items-center bg-slate-800/50 rounded-lg border border-slate-700/50 p-0.5">
-            {(['all', 'reddit', 'hackernews'] as const).map((val) => (
+            {(['all', 'reddit', ...(hasHN ? ['hackernews'] : []), ...(hasPH ? ['producthunt'] : [])] as const).map((val) => (
               <button
                 key={val}
-                onClick={() => onSetPlatformFilter(val)}
+                onClick={() => onSetPlatformFilter(val as PlatformFilter)}
                 className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                   platformFilter === val
                     ? 'bg-slate-700 text-white'
                     : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                {val === 'all' ? 'All' : val === 'reddit' ? 'Reddit' : 'HN'}
+                {val === 'all' ? 'All' : val === 'reddit' ? 'Reddit' : val === 'hackernews' ? 'HN' : 'PH'}
               </button>
             ))}
           </div>
