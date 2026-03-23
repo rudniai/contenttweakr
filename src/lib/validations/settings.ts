@@ -21,6 +21,8 @@ export const updateSettingsSchema = z.object({
   email_notifications: z.boolean().optional(),
   notification_threshold: z.number().int().min(0).max(100).optional(),
   skip_toxic_threads: z.boolean().optional(),
+  hn_enabled: z.boolean().optional(),
+  hn_keywords: tagArray.nullable().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;

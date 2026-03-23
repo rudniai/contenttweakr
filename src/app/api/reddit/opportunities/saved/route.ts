@@ -30,6 +30,7 @@ export async function GET(request: Request) {
         scanned_at,
         hidden,
         replied_at,
+        platform,
         generated_responses (
           id,
           response_text,
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
       date: opp.scanned_at,
       hidden: opp.hidden || false,
       repliedAt: opp.replied_at || null,
+      platform: opp.platform || 'reddit',
       aiResponse: opp.generated_responses?.[0]?.response_text || undefined,
     }));
 

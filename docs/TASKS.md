@@ -32,7 +32,7 @@
 | 16 | Scheduled scanning (cron) | DONE | L | Worker hosting | Vercel cron every 6h, user-configurable frequency |
 | 17 | Email notifications for high-confidence opps | DONE | L | #16 | Resend integration, configurable threshold, test endpoint |
 | 18 | Sentiment analysis (skip toxic threads) | DONE | M | None | Keyword-based sentiment scoring, skip toxic threads setting |
-| 19 | Hacker News support | TODO | L | Architecture | New scanner module |
+| 19 | Hacker News support | DONE | L | Architecture | HN API client, scorer, platform filter, settings toggle |
 | 20 | Product Hunt support | TODO | L | Architecture | New scanner module |
 | 21 | Analytics dashboard | TODO | L | Data collection | Track response rates, etc. |
 | 22 | Multi-user / multi-tenant | TODO | XL | Auth overhaul | Billing, roles, quotas |

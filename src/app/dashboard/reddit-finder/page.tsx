@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import type { Opportunity, ScanStatus } from './components/types';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ScanControls from './components/ScanControls';
-import Filters from './components/Filters';
+import Filters, { type PlatformFilter } from './components/Filters';
 import OpportunityList from './components/OpportunityList';
 import ErrorAlert, { type ErrorType } from './components/ErrorAlert';
 import BulkActionBar from './components/BulkActionBar';
@@ -55,6 +55,7 @@ function RedditFinderContent() {
   const [markingRepliedIds, setMarkingRepliedIds] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkActioning, setIsBulkActioning] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
 
   const setTypedError = useCallback((message: string, type: ErrorType) => {
     setError({ message, type });
@@ -104,6 +105,7 @@ function RedditFinderContent() {
               confidence: opp.confidence,
               upvotes: opp.upvotes,
               comments: opp.comments,
+              platform: opp.platform || 'reddit',
             })));
           } else {
             setOpportunities([]);
@@ -402,6 +404,7 @@ function RedditFinderContent() {
   const visibleOpportunities = opportunities.filter((o) => {
     if (!showHidden && o.hidden) return false;
     if (hideReplied && o.repliedAt) return false;
+    if (platformFilter !== 'all' && (o.platform || 'reddit') !== platformFilter) return false;
     return true;
   });
 
@@ -471,6 +474,9 @@ function RedditFinderContent() {
               hideReplied={hideReplied}
               onSetShowHidden={setShowHidden}
               onSetHideReplied={setHideReplied}
+              platformFilter={platformFilter}
+              onSetPlatformFilter={setPlatformFilter}
+              hasHN={opportunities.some((o) => o.platform === 'hackernews')}
             />
             <BulkActionBar
               selectedCount={selectedIds.size}

@@ -9,6 +9,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { SUBREDDITS as DEFAULT_SUBREDDITS, KEYWORDS as DEFAULT_KEYWORDS, QUESTION_PATTERNS, calculateRelevance } from '../src/lib/reddit/config';
+import { fetchHNStories } from '../src/lib/hn/client';
+import { isHNRelevant, calculateHNRelevance } from '../src/lib/hn/scorer';
 import { sendOpportunityNotification } from '../src/lib/email/send';
 import { calculateSentiment, isToxic } from '../src/lib/sentiment';
 
@@ -55,6 +57,7 @@ interface Opportunity {
   upvotes: number;
   comments: number;
   sentiment_score: number;
+  platform: 'reddit' | 'hackernews';
 }
 
 function randomUserAgent(): string {
@@ -117,12 +120,14 @@ interface UserSettings {
   email_notifications: boolean;
   notification_threshold: number;
   skip_toxic_threads: boolean;
+  hn_enabled: boolean;
+  hn_keywords: string[];
 }
 
 async function getUserSettings(userId: string): Promise<UserSettings> {
   const { data, error } = await supabase
     .from('user_settings')
-    .select('subreddits, keywords, email_notifications, notification_threshold, skip_toxic_threads')
+    .select('subreddits, keywords, email_notifications, notification_threshold, skip_toxic_threads, hn_enabled, hn_keywords')
     .eq('user_id', userId)
     .single();
 
@@ -133,6 +138,8 @@ async function getUserSettings(userId: string): Promise<UserSettings> {
       email_notifications: false,
       notification_threshold: 70,
       skip_toxic_threads: true,
+      hn_enabled: false,
+      hn_keywords: DEFAULT_KEYWORDS,
     };
   }
 
@@ -142,6 +149,8 @@ async function getUserSettings(userId: string): Promise<UserSettings> {
     email_notifications: data.email_notifications ?? false,
     notification_threshold: data.notification_threshold ?? 70,
     skip_toxic_threads: data.skip_toxic_threads ?? true,
+    hn_enabled: data.hn_enabled ?? false,
+    hn_keywords: data.hn_keywords ?? data.keywords ?? DEFAULT_KEYWORDS,
   };
 }
 
@@ -170,7 +179,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
   try {
     // Load user-specific settings
     const settings = await getUserSettings(user_id);
-    console.log(`  Using ${settings.subreddits.length} subreddits, ${settings.keywords.length} keywords`);
+    console.log(`  Using ${settings.subreddits.length} subreddits, ${settings.keywords.length} keywords, HN=${settings.hn_enabled}`);
 
     const opportunities: Opportunity[] = [];
     const now = Date.now() / 1000;
@@ -178,6 +187,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
     const succeeded: string[] = [];
     const failed: string[] = [];
 
+    // ── Reddit scanning ──────────────────────────────────────────────────────
     for (const sub of settings.subreddits) {
       const posts = await fetchSubredditPosts(sub, 100);
 
@@ -211,13 +221,58 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
           upvotes: post.ups,
           comments: post.num_comments,
           sentiment_score: sentimentScore,
+          platform: 'reddit',
         });
       }
 
       await randomDelay(3000, 6000);
     }
 
-    console.log(`  Succeeded: ${succeeded.length}/${settings.subreddits.length} | Failed: ${failed.length}`);
+    console.log(`  Reddit — Succeeded: ${succeeded.length}/${settings.subreddits.length} | Failed: ${failed.length}`);
+
+    // ── Hacker News scanning ─────────────────────────────────────────────────
+    if (settings.hn_enabled) {
+      console.log('  Scanning Hacker News (top 50 stories)...');
+      try {
+        const stories = await fetchHNStories(50);
+        let hnMatched = 0;
+
+        for (const story of stories) {
+          if (story.time < cutoffTime) continue;
+
+          const hnKeywords = settings.hn_keywords;
+          const combined = `${story.title} ${story.text || ''}`;
+          const hasKeyword = hnKeywords.some((kw) => combined.toLowerCase().includes(kw.toLowerCase()));
+          if (!hasKeyword && !isHNRelevant(story.title, story.text || '')) continue;
+
+          const score = calculateHNRelevance(story.title, story.text || '');
+          if (score < 10) continue;
+
+          const sentimentScore = calculateSentiment(story.title, story.text || '');
+          if (settings.skip_toxic_threads && isToxic(story.title, story.text || '')) {
+            continue;
+          }
+
+          hnMatched++;
+          opportunities.push({
+            date: new Date(story.time * 1000).toISOString(),
+            subreddit: 'hackernews',
+            title: story.title,
+            url: `https://news.ycombinator.com/item?id=${story.id}`,
+            context: (story.text || '').substring(0, 500),
+            confidence: score,
+            upvotes: story.score,
+            comments: story.descendants || 0,
+            sentiment_score: sentimentScore,
+            platform: 'hackernews',
+          });
+        }
+
+        console.log(`  HN — ${stories.length} stories fetched, ${hnMatched} matched`);
+      } catch (err) {
+        console.error('  HN scanning error:', err);
+      }
+    }
 
     // Sort by confidence and take top 20
     opportunities.sort((a, b) => b.confidence - a.confidence);
@@ -235,6 +290,7 @@ async function executeScan(scanRequest: { id: string; user_id: string; hours: nu
         upvotes: opp.upvotes,
         comments: opp.comments,
         sentiment_score: opp.sentiment_score,
+        platform: opp.platform,
         scanned_at: new Date().toISOString(),
         scan_id: id,
       }));

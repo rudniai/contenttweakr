@@ -1,3 +1,5 @@
+export type Platform = 'reddit' | 'hackernews';
+
 export interface Opportunity {
   id?: string;
   date: string;
@@ -11,6 +13,7 @@ export interface Opportunity {
   hidden?: boolean;
   repliedAt?: string | null;
   aiResponse?: string;
+  platform?: Platform;
 }
 
 export interface ScanStatus {

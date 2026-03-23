@@ -121,9 +121,16 @@ export default function OpportunityCard({
             aria-label={`Select ${opp.title}`}
           />
         )}
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700/30">
-          r/{opp.subreddit}
-        </span>
+        {opp.platform === 'hackernews' ? (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-900/50 text-orange-300 border border-orange-700/30">
+            <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0v16h16V0H0zm8.7 8.6v4.3H7.3V8.6L4 3h1.6L8 7l2.4-4H12L8.7 8.6z"/></svg>
+            Hacker News
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700/30">
+            r/{opp.subreddit}
+          </span>
+        )}
         <ConfidenceBadge score={opp.confidence} />
         {opp.repliedAt && (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300 border border-purple-700/30">
@@ -131,7 +138,7 @@ export default function OpportunityCard({
           </span>
         )}
         <span className="text-xs text-slate-500">
-          {opp.upvotes} upvotes &middot; {opp.comments} comments
+          {opp.platform === 'hackernews' ? 'points' : 'upvotes'}: {opp.upvotes} &middot; {opp.comments} comments
         </span>
       </div>
 
@@ -150,9 +157,16 @@ export default function OpportunityCard({
         href={opp.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-block text-xs text-blue-400/70 hover:text-blue-300 transition-colors mb-3"
+        className={`inline-flex items-center gap-1 text-xs transition-colors mb-3 ${opp.platform === 'hackernews' ? 'text-orange-400/70 hover:text-orange-300' : 'text-blue-400/70 hover:text-blue-300'}`}
       >
-        View on Reddit &rarr;
+        {opp.platform === 'hackernews' ? (
+          <>
+            <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0v16h16V0H0zm8.7 8.6v4.3H7.3V8.6L4 3h1.6L8 7l2.4-4H12L8.7 8.6z"/></svg>
+            View on Hacker News &rarr;
+          </>
+        ) : (
+          <>View on Reddit &rarr;</>
+        )}
       </a>
 
       {/* Context */}
