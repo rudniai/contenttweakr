@@ -72,6 +72,7 @@ export default function OpportunityCard({
   const [editedText, setEditedText] = useState('');
   const [selectedModel, setSelectedModel] = useState<AIModel>('sonnet');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [contextExpanded, setContextExpanded] = useState(false);
 
   const handleEdit = () => {
     setEditedText(opp.aiResponse || '');
@@ -160,7 +161,7 @@ export default function OpportunityCard({
         rel="noopener noreferrer"
         className="block group mb-1"
       >
-        <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors leading-snug break-words">
+        <h3 className="text-base sm:text-lg font-semibold text-white group-hover:text-blue-400 transition-colors leading-snug break-words" style={{ overflowWrap: 'anywhere' }}>
           {opp.title}
         </h3>
       </a>
@@ -187,10 +188,18 @@ export default function OpportunityCard({
 
       {/* Context */}
       {opp.context && (
-        <div className="bg-slate-900/50 rounded-lg p-4 mb-4 border border-slate-700/30">
-          <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 break-words">
+        <div className="bg-slate-900/50 rounded-lg p-3 sm:p-4 mb-4 border border-slate-700/30">
+          <p className={`text-sm text-slate-400 leading-relaxed break-words ${contextExpanded ? '' : 'line-clamp-3 sm:line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
             {opp.context}
           </p>
+          {opp.context.length > 150 && (
+            <button
+              onClick={() => setContextExpanded(!contextExpanded)}
+              className="mt-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              {contextExpanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
         </div>
       )}
 
@@ -198,7 +207,7 @@ export default function OpportunityCard({
       <div className="border-t border-slate-700/50 pt-4">
         {opp.aiResponse ? (
           <>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-emerald-400">
                   Generated Response
@@ -216,18 +225,18 @@ export default function OpportunityCard({
                   <span className="text-xs text-amber-400/70">(edited)</span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 {isEditing ? (
                   <>
                     <Button
                       onClick={handleSave}
-                      className="text-xs px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-600 text-emerald-100 transition-colors"
+                      className="text-xs px-3 py-1.5 sm:py-1 rounded-md bg-emerald-700 hover:bg-emerald-600 text-emerald-100 transition-colors"
                     >
                       Save
                     </Button>
                     <Button
                       onClick={handleCancel}
-                      className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                      className="text-xs px-3 py-1.5 sm:py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
                     >
                       Cancel
                     </Button>
@@ -236,20 +245,29 @@ export default function OpportunityCard({
                   <>
                     <Button
                       onClick={handleEdit}
-                      className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                      aria-label="Edit response"
+                      className="text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
                     >
-                      Edit
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                     <Button
                       onClick={() => onCopyToClipboard(displayText, idx)}
                       aria-label="Copy response to clipboard"
-                      className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                      className={`text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md transition-colors ${
                         copiedIdx === idx
                           ? 'bg-emerald-700 text-emerald-100'
                           : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                       }`}
                     >
-                      {copiedIdx === idx ? 'Copied!' : 'Copy'}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                      </svg>
+                      <span className="hidden sm:inline">{copiedIdx === idx ? 'Copied!' : 'Copy'}</span>
+                      <span className="sm:hidden">{copiedIdx === idx ? '✓' : ''}</span>
                     </Button>
                     {onDeleteResponse && opp.aiResponseId && (
                       showDeleteConfirm ? (
@@ -260,13 +278,13 @@ export default function OpportunityCard({
                               setShowDeleteConfirm(false);
                             }}
                             disabled={isDeletingResponse}
-                            className="text-xs px-3 py-1 rounded-md bg-red-700 hover:bg-red-600 text-red-100 transition-colors"
+                            className="text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md bg-red-700 hover:bg-red-600 text-red-100 transition-colors"
                           >
-                            {isDeletingResponse ? 'Deleting...' : 'Confirm'}
+                            {isDeletingResponse ? '...' : 'Confirm'}
                           </Button>
                           <Button
                             onClick={() => setShowDeleteConfirm(false)}
-                            className="text-xs px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                            className="text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
                           >
                             Cancel
                           </Button>
@@ -275,7 +293,7 @@ export default function OpportunityCard({
                         <Button
                           onClick={() => setShowDeleteConfirm(true)}
                           aria-label="Delete response"
-                          className="text-xs px-2 py-1 rounded-md bg-slate-700 hover:bg-red-700/70 text-slate-400 hover:text-red-200 transition-colors"
+                          className="text-xs px-2 py-1.5 sm:py-1 rounded-md bg-slate-700 hover:bg-red-700/70 text-slate-400 hover:text-red-200 transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -287,22 +305,27 @@ export default function OpportunityCard({
                       <Button
                         onClick={() => {
                           onDeleteResponse(opp);
-                          // After delete completes, generate will be triggered by parent
                         }}
                         disabled={isDeletingResponse || isGenerating}
                         aria-label="Regenerate response"
-                        className="text-xs px-3 py-1 rounded-md bg-blue-700 hover:bg-blue-600 text-blue-100 transition-colors"
+                        className="text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md bg-blue-700 hover:bg-blue-600 text-blue-100 transition-colors"
                       >
-                        Regenerate
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:hidden" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                        </svg>
+                        <span className="hidden sm:inline">Regenerate</span>
                       </Button>
                     )}
                     {!opp.repliedAt && opp.id && (
                       <Button
                         onClick={() => onMarkReplied(opp)}
                         disabled={isMarkingReplied}
-                        className="text-xs px-3 py-1 rounded-md bg-purple-700 hover:bg-purple-600 text-purple-100 transition-colors"
+                        className="text-xs px-2 sm:px-3 py-1.5 sm:py-1 rounded-md bg-purple-700 hover:bg-purple-600 text-purple-100 transition-colors"
                       >
-                        {isMarkingReplied ? 'Marking...' : 'Mark as Replied'}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:hidden" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="hidden sm:inline">{isMarkingReplied ? 'Marking...' : 'Mark as Replied'}</span>
                       </Button>
                     )}
                   </>
@@ -317,8 +340,8 @@ export default function OpportunityCard({
                 rows={6}
               />
             ) : (
-              <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-4">
-                <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap break-words">
+              <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-3 sm:p-4">
+                <p className="text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap break-words" style={{ overflowWrap: 'anywhere' }}>
                   {displayText}
                 </p>
               </div>
@@ -352,14 +375,14 @@ export default function OpportunityCard({
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value as AIModel)}
-              className="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors"
+              className="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 sm:px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors shrink-0"
             >
               <option value="sonnet">Sonnet</option>
               <option value="opus">Opus</option>
             </select>
             <Button
               onClick={() => onGenerateResponse(idx, selectedModel)}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-3 sm:px-4 rounded-lg transition-colors min-w-0"
             >
               Generate Response
             </Button>
