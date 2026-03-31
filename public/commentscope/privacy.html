@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — CommentScope</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif; color: #1e293b; background: #f8fafc; line-height: 1.7; }
+    .container { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .badge { display: inline-block; background: #eef2ff; color: #4f46e5; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 9999px; margin-bottom: 12px; }
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px; }
+    .updated { font-size: 14px; color: #64748b; margin-bottom: 40px; }
+    h2 { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 40px; margin-bottom: 12px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+    h2:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+    h3 { font-size: 16px; font-weight: 600; color: #334155; margin-top: 24px; margin-bottom: 8px; }
+    p { margin-bottom: 16px; font-size: 15px; color: #334155; }
+    ul { margin-bottom: 16px; padding-left: 24px; }
+    li { margin-bottom: 6px; font-size: 15px; color: #334155; }
+    .summary-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+    .summary-box ul { list-style: none; padding: 0; margin: 0; }
+    .summary-box li { padding: 6px 0; font-size: 15px; }
+    .summary-box li::before { content: '\2713'; color: #10b981; font-weight: 700; margin-right: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 14px; }
+    th { text-align: left; background: #f1f5f9; padding: 10px 14px; font-weight: 600; color: #334155; border: 1px solid #e2e8f0; }
+    td { padding: 10px 14px; border: 1px solid #e2e8f0; color: #475569; }
+    strong { color: #0f172a; }
+    a { color: #4f46e5; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #94a3b8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">CommentScope</span>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: March 31, 2026</p>
+
+    <div class="summary-box">
+      <ul>
+        <li>We don't collect your personal data</li>
+        <li>We don't track your browsing</li>
+        <li>We don't store your Instagram credentials</li>
+        <li>Everything processes locally in your browser</li>
+        <li>We don't send data to any external servers</li>
+        <li>No analytics, no tracking</li>
+      </ul>
+    </div>
+
+    <h2>Overview</h2>
+    <p>CommentScope ("the Extension") is committed to protecting your privacy. This privacy policy explains what data we access, how we process it, and what we store.</p>
+
+    <h2>How the Extension Works</h2>
+    <p>CommentScope offers two extraction modes:</p>
+
+    <h3>Page Mode (Current Page)</h3>
+    <p>When you click "Extract Comments" while viewing an Instagram post, a script reads comments from the visible page, processes them locally in your browser, and exports them to CSV and/or JSON files on your device.</p>
+
+    <h3>URL Mode (Paste URL)</h3>
+    <p>When you paste an Instagram post URL, the extension makes requests to Instagram's web API from your browser. These requests use your existing Instagram session (via browser cookies) to authenticate — the same way your browser does when you visit instagram.com. Comments are fetched, processed locally, and exported to your device.</p>
+
+    <p><strong>In both modes, all processing happens locally. No comment data is sent to any external server.</strong></p>
+
+    <h2>What Data We Access</h2>
+
+    <h3>Instagram Comments (Processed Locally)</h3>
+    <p>The extension reads: comment text, usernames and profile URLs, timestamps, and reply/thread structure.</p>
+
+    <h3>Instagram Session Cookies (URL Mode Only)</h3>
+    <p>In URL mode, the extension reads your Instagram <code>csrftoken</code> cookie to authenticate API requests. This is functionally identical to your browser visiting instagram.com.</p>
+
+    <p><strong>We do NOT:</strong></p>
+    <ul>
+      <li>Store, copy, or transmit your session cookies</li>
+      <li>Access your Instagram password</li>
+      <li>Access your private messages, stories, or DMs</li>
+      <li>Post, like, comment, follow, or take any write action on your behalf</li>
+      <li>Send cookies or session data to any external server</li>
+    </ul>
+
+    <h2>What Data We Store</h2>
+
+    <h3>Temporary Progress Data (Local Only)</h3>
+    <table>
+      <tr><th>Key</th><th>Type</th><th>Purpose</th></tr>
+      <tr><td>commentCount</td><td>number</td><td>Comments extracted so far</td></tr>
+      <tr><td>totalComments</td><td>number</td><td>Estimated total comments on the post</td></tr>
+      <tr><td>replyCount</td><td>number</td><td>Replies extracted so far</td></tr>
+      <tr><td>extractionStopped</td><td>boolean</td><td>Flag to signal user-initiated stop</td></tr>
+    </table>
+    <p>These values are overwritten at the start of each extraction and are not persisted between sessions. Storage location: Chrome's local storage (stays on your device).</p>
+
+    <h2>What Data We Collect</h2>
+    <p><strong>None.</strong> We collect no analytics, no usage data, no personal information. We don't even know how many people use the extension, which posts you extract comments from, or how often you use it.</p>
+
+    <h2>Permissions Explained</h2>
+    <table>
+      <tr><th>Permission</th><th>Why We Need It</th></tr>
+      <tr><td>activeTab</td><td>Detect whether you're on an Instagram post</td></tr>
+      <tr><td>scripting</td><td>Inject the extraction script into the Instagram page (Page Mode)</td></tr>
+      <tr><td>storage</td><td>Store temporary progress counters during extraction</td></tr>
+      <tr><td>downloads</td><td>Save CSV/JSON export files to your device</td></tr>
+      <tr><td>cookies</td><td>Read Instagram csrftoken for authenticated API requests (URL Mode)</td></tr>
+      <tr><td>instagram.com host</td><td>Access Instagram pages and API endpoints</td></tr>
+    </table>
+
+    <h2>Third-Party Services</h2>
+    <p><strong>None.</strong> The extension does not integrate with any third-party services, analytics platforms, or external APIs. The only network requests are to instagram.com — using your own browser session.</p>
+
+    <h2>Data Sharing</h2>
+    <p><strong>We don't share data because we don't collect data.</strong> The only "data sharing" that occurs is you downloading the CSV/JSON files created locally. The files stay on your device. You control where they go.</p>
+
+    <h2>Data Security</h2>
+    <p>Since all processing happens locally in your browser, your data never leaves your device (unless you manually share the exported files). There are no server-side vulnerabilities and no third-party data breaches possible.</p>
+
+    <h2>Children's Privacy</h2>
+    <p>The extension does not knowingly collect data from anyone, including children under 13. Since we collect no data at all, this is inherently compliant with COPPA.</p>
+
+    <h2>Instagram's Terms of Service</h2>
+    <p>This extension is designed to only access publicly visible comments, respect rate limits, and not abuse Instagram's platform.</p>
+    <p><strong>User Responsibility:</strong> You must comply with Instagram's Terms of Service. Only extract comments you have permission to access. Use extracted data responsibly and legally. You are solely responsible for how you use exported data.</p>
+
+    <h2>European Users (GDPR)</h2>
+    <p>Since we collect no personal data: no data processing occurs on our side, no data controller/processor relationship exists, and no data subject access requests are needed (we have no data).</p>
+
+    <h2>California Users (CCPA)</h2>
+    <p>We do not sell your personal information because we don't collect personal information, we don't share data with third parties, and everything is local.</p>
+
+    <h2>Your Rights</h2>
+    <ul>
+      <li>Use the extension anonymously (we don't know who you are)</li>
+      <li>Uninstall the extension at any time (removes all local storage)</li>
+      <li>Request data deletion (there's no data to delete on our end)</li>
+    </ul>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this privacy policy. Changes will be posted on this page and on the Chrome Web Store listing. Continued use after changes constitutes acceptance of the updated terms.</p>
+
+    <h2>Open Source</h2>
+    <p>This extension is open source. You can review the code to verify our privacy claims at <a href="https://github.com/rudniai/comment-extractor">github.com/rudniai/comment-extractor</a>.</p>
+
+    <h2>Disclaimer</h2>
+    <p><strong>Not Affiliated with Instagram/Meta.</strong> This extension is an independent tool and not endorsed by, sponsored by, or affiliated with Instagram, Meta Platforms, Inc., or Facebook.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about privacy? Email <a href="mailto:support@commentscope.io">support@commentscope.io</a>. Response time: 48-72 hours.</p>
+
+    <h2>Consent</h2>
+    <p>By installing and using CommentScope, you consent to this privacy policy and agree to use the extension responsibly.</p>
+
+    <div class="footer">
+      CommentScope &mdash; All processing stays local. &mdash; <a href="terms.html">Terms of Service</a>
+    </div>
+  </div>
+</body>
+</html>
