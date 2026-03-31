@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CommentScope — Scrape and Download Instagram Comments</title>
+  <meta name="description" content="Free Chrome extension to extract all comments from Instagram posts and reels. Export to CSV or JSON with full thread structure. Unlimited, private, no signup.">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif; color: #e2e8f0; background: #0a0a14; overflow-x: hidden; }
+    a { color: #818cf8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    }
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+      top: -200px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .hero-glow2 {
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 720px; }
+    .hero-badge { display: inline-block; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #818cf8; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 99px; margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; color: white; }
+    .hero h1 span { background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 36px; max-width: 540px; margin-left: auto; margin-right: auto; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 10px; background: #6366f1; color: white; font-size: 16px; font-weight: 600; padding: 14px 32px; border-radius: 12px; text-decoration: none; transition: all 0.2s; box-shadow: 0 8px 30px rgba(99,102,241,0.4); }
+    .hero-cta:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,0.5); text-decoration: none; }
+    .hero-sub { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.4); }
+
+    /* Features */
+    .features {
+      padding: 80px 24px;
+      background: #0f172a;
+      position: relative;
+    }
+    .features-inner { max-width: 1000px; margin: 0 auto; }
+    .features h2 { text-align: center; font-size: 32px; font-weight: 800; color: white; margin-bottom: 12px; letter-spacing: -0.5px; }
+    .features .subtitle { text-align: center; color: rgba(255,255,255,0.5); font-size: 16px; margin-bottom: 48px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .feature-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(99,102,241,0.3); transform: translateY(-4px); }
+    .feature-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 22px; }
+    .feature-card h3 { font-size: 17px; font-weight: 700; color: white; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+    /* How it works */
+    .how {
+      padding: 80px 24px;
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+    }
+    .how-inner { max-width: 800px; margin: 0 auto; }
+    .how h2 { text-align: center; font-size: 32px; font-weight: 800; color: white; margin-bottom: 48px; letter-spacing: -0.5px; }
+    .step { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 36px; }
+    .step-num { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
+    .step-content h3 { font-size: 18px; font-weight: 700; color: white; margin-bottom: 6px; }
+    .step-content p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+    /* Use cases */
+    .usecases {
+      padding: 80px 24px;
+      background: #0f172a;
+    }
+    .usecases-inner { max-width: 1000px; margin: 0 auto; }
+    .usecases h2 { text-align: center; font-size: 32px; font-weight: 800; color: white; margin-bottom: 48px; letter-spacing: -0.5px; }
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .usecase {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .usecase:hover { background: rgba(255,255,255,0.06); transform: translateY(-3px); }
+    .usecase-emoji { font-size: 32px; margin-bottom: 12px; display: block; }
+    .usecase h3 { font-size: 15px; font-weight: 700; color: white; margin-bottom: 6px; }
+    .usecase p { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.4; }
+
+    /* Support */
+    .support {
+      padding: 60px 24px;
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+      text-align: center;
+    }
+    .support-inner { max-width: 500px; margin: 0 auto; }
+    .support h2 { font-size: 28px; font-weight: 800; color: white; margin-bottom: 12px; }
+    .support p { color: rgba(255,255,255,0.5); font-size: 15px; margin-bottom: 24px; line-height: 1.5; }
+    .support-email {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      padding: 14px 28px; border-radius: 12px; color: white; font-size: 16px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .support-email:hover { background: rgba(255,255,255,0.1); text-decoration: none; }
+
+    /* Footer */
+    .footer {
+      padding: 32px 24px;
+      background: #0a0a14;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+    .footer-links a { color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 500; }
+    .footer-links a:hover { color: rgba(255,255,255,0.7); }
+    .footer-copy { color: rgba(255,255,255,0.25); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Chrome Extension &mdash; 100% Free</div>
+    <h1>Scrape <span>Every Comment</span> from Instagram</h1>
+    <p>Extract thousands of comments from any post or reel. Export to CSV or JSON with full thread structure. Privacy-first, no signup.</p>
+    <a href="https://chrome.google.com/webstore" class="hero-cta">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Add to Chrome &mdash; Free
+    </a>
+    <div class="hero-sub">No signup &bull; No data collection &bull; Works instantly</div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="features-inner">
+    <h2>Why CommentScope?</h2>
+    <p class="subtitle">Built for creators, analysts, and researchers who need real data.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(74,222,128,0.1); color:#4ade80;">&#8734;</div>
+        <h3>Unlimited Extraction</h3>
+        <p>No caps, no limits. Extract 10 or 10,000 comments. Competitors charge $30/month and cap at 100.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(96,165,250,0.1); color:#60a5fa;">{ }</div>
+        <h3>CSV + JSON Export</h3>
+        <p>Structured data with usernames, timestamps, thread IDs, and reply chains. Ready for spreadsheets or AI.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(167,139,250,0.1); color:#a78bfa;">&#x21B3;</div>
+        <h3>Thread Structure</h3>
+        <p>Replies linked to parent comments with depth, thread IDs, and parent IDs. Real conversation trees.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(251,191,36,0.1); color:#fbbf24;">&#x1F512;</div>
+        <h3>100% Private</h3>
+        <p>All processing happens locally in your browser. Zero data sent to servers. We don't even have analytics.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(244,114,182,0.1); color:#f472b6;">&#x26A1;</div>
+        <h3>Two Extraction Modes</h3>
+        <p>Extract from the current page (auto-scroll) or paste any Instagram URL. Both work instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(45,212,191,0.1); color:#2dd4bf;">&#x2714;</div>
+        <h3>All Post Types</h3>
+        <p>Works on posts, reels, IGTV, profile modals. Handles any Instagram URL pattern automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how">
+  <div class="how-inner">
+    <h2>How It Works</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Open any Instagram post or reel</h3>
+        <p>Navigate to the post in your browser, or copy the URL from the Instagram app.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Click CommentScope</h3>
+        <p>Open the extension popup. It auto-detects the post and shows the comment count.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Hit Extract</h3>
+        <p>CommentScope auto-scrolls the page, loads replies, and captures every comment with full metadata.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Download CSV or JSON</h3>
+        <p>Get structured data with usernames, timestamps, thread structure, and reply chains. Ready for analysis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Use Cases -->
+<section class="usecases">
+  <div class="usecases-inner">
+    <h2>Built For</h2>
+    <div class="usecase-grid">
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F4CA;</span>
+        <h3>Sentiment Analysis</h3>
+        <p>Feed comments into AI to understand audience sentiment at scale.</p>
+      </div>
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F381;</span>
+        <h3>Giveaway Picks</h3>
+        <p>Export all entries, filter duplicates, pick random winners fairly.</p>
+      </div>
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F50D;</span>
+        <h3>Creator Research</h3>
+        <p>Analyze engagement patterns, find top fans, track comment trends.</p>
+      </div>
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F4DD;</span>
+        <h3>Content Ideas</h3>
+        <p>Mine comments for questions, complaints, and content inspiration.</p>
+      </div>
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F4C1;</span>
+        <h3>Archival</h3>
+        <p>Preserve comment history before posts are deleted or hidden.</p>
+      </div>
+      <div class="usecase">
+        <span class="usecase-emoji">&#x1F916;</span>
+        <h3>AI Training Data</h3>
+        <p>Structured comment data for NLP, chatbots, or social media research.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Support -->
+<section class="support" id="support">
+  <div class="support-inner">
+    <h2>Need Help?</h2>
+    <p>Having issues or have a feature request? We typically respond within 48 hours.</p>
+    <a href="mailto:rudniai14@gmail.com?subject=CommentScope%20Support" class="support-email">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+      rudniai14@gmail.com
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="#support">Support</a>
+    <a href="https://github.com/rudniai/comment-extractor">GitHub</a>
+  </div>
+  <div class="footer-copy">CommentScope &mdash; Not affiliated with Instagram or Meta Platforms, Inc.</div>
+</footer>
+
+</body>
+</html>
