@@ -16,11 +16,15 @@
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(255,255,255,0.08); }
     .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 48px; display: flex; align-items: center; justify-content: space-between; }
     .nav-brand { color: #f5f5f7; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-    .nav-links { display: flex; gap: 28px; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
     .nav-links a { color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 400; }
     .nav-links a:hover { color: #fff; text-decoration: none; }
     .nav-cta { background: #2997ff; color: white !important; padding: 6px 16px; border-radius: 980px; font-size: 12px; font-weight: 500; }
     .nav-cta:hover { background: #0077d4; text-decoration: none; }
+    @media (max-width: 640px) {
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-brand { font-size: 16px; }
+    }
 
     /* Hero - full viewport, centered, Apple style */
     .hero {
