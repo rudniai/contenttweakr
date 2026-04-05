@@ -31,7 +31,8 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    request.nextUrl.pathname.startsWith("/dashboard")
+    (request.nextUrl.pathname.startsWith("/dashboard") ||
+      request.nextUrl.pathname.startsWith("/chatbase"))
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
