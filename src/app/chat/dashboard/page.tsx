@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
-import { listChatbots, type Chatbot } from '@/lib/chatbase/db';
+import { listChatbots, getServiceClient, type Chatbot } from '@/lib/chatbase/db';
 import ChatbotList from './ChatbotList';
 
 export default async function ChatbaseDashboardPage() {
@@ -13,7 +13,6 @@ export default async function ChatbaseDashboardPage() {
     console.error('[chatbase/dashboard] auth.getUser error:', err);
   }
 
-  // User is guaranteed by layout auth check, but keep for type safety
   if (!user) return null;
 
   let chatbots: Chatbot[] = [];
@@ -23,14 +22,81 @@ export default async function ChatbaseDashboardPage() {
     console.error('[chatbase/dashboard] listChatbots error:', err);
   }
 
+  // Analytics
+  const chatbotIds = chatbots.map((c) => c.id);
+  let analytics = {
+    totalConversations: 0,
+    totalMessages: 0,
+    messagesToday: 0,
+    messagesThisWeek: 0,
+    escalationRate: 0,
+    topQuestions: [] as { question: string; count: number }[],
+  };
+
+  if (chatbotIds.length > 0) {
+    try {
+      const db = getServiceClient();
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Get all conversation IDs for this user
+      const { data: convRows, count: convCount } = await db
+        .from('cb_conversations')
+        .select('id', { count: 'exact' })
+        .in('chatbot_id', chatbotIds);
+
+      analytics.totalConversations = convCount ?? 0;
+      const convIds = (convRows ?? []).map((c: { id: string }) => c.id);
+
+      if (convIds.length > 0) {
+        const [turnsResult, todayResult, weekResult] = await Promise.allSettled([
+          db.from('cb_conversation_turns').select('escalated').in('conversation_id', convIds),
+          db.from('cb_conversation_turns')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', convIds)
+            .gte('created_at', todayStart),
+          db.from('cb_conversation_turns')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', convIds)
+            .gte('created_at', weekStart),
+        ]);
+
+        if (turnsResult.status === 'fulfilled' && turnsResult.value.data) {
+          const turns = turnsResult.value.data as { escalated: boolean }[];
+          analytics.totalMessages = turns.length;
+          const escalated = turns.filter((t) => t.escalated).length;
+          analytics.escalationRate = turns.length > 0 ? Math.round((escalated / turns.length) * 100) : 0;
+        }
+        if (todayResult.status === 'fulfilled') {
+          analytics.messagesToday = todayResult.value.count ?? 0;
+        }
+        if (weekResult.status === 'fulfilled') {
+          analytics.messagesThisWeek = weekResult.value.count ?? 0;
+        }
+      }
+    } catch (err) {
+      console.error('[chatbase/dashboard] analytics error:', err);
+    }
+  }
+
+  const metrics = [
+    { label: 'Total Conversations', value: analytics.totalConversations.toLocaleString() },
+    { label: 'Total Messages', value: analytics.totalMessages.toLocaleString() },
+    { label: 'Messages Today', value: analytics.messagesToday.toLocaleString() },
+    { label: 'Messages This Week', value: analytics.messagesThisWeek.toLocaleString() },
+    { label: 'Escalation Rate', value: `${analytics.escalationRate}%` },
+    { label: 'Active Chatbots', value: chatbots.length.toLocaleString() },
+  ];
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Chatbots</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Manage and deploy your AI chatbots
+            Overview of your AI chatbots
           </p>
         </div>
         <Link
@@ -48,6 +114,18 @@ export default async function ChatbaseDashboardPage() {
           New Chatbot
         </Link>
       </div>
+
+      {/* Analytics metrics */}
+      {chatbots.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+          {metrics.map((m) => (
+            <div key={m.label} className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 mb-1">{m.label}</p>
+              <p className="text-2xl font-bold text-gray-900">{m.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Empty state */}
       {chatbots.length === 0 && (
@@ -78,8 +156,15 @@ export default async function ChatbaseDashboardPage() {
         </div>
       )}
 
-      {/* Chatbot cards */}
-      <ChatbotList chatbots={chatbots} />
+      {/* Chatbots section */}
+      {chatbots.length > 0 && (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Your Chatbots</h2>
+          </div>
+          <ChatbotList chatbots={chatbots} />
+        </>
+      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
 import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getChatbot } from '@/lib/chatbase/db';
-import ChatbotEditor from './ChatbotEditor';
+import EmbedClient from './EmbedClient';
 
 type Props = { params: Promise<{ id: string }> };
 
-export default async function ChatbotPage({ params }: Props) {
+export default async function EmbedPage({ params }: Props) {
   const { id } = await params;
 
   const supabase = createChatbaseServerClient();
@@ -14,7 +14,7 @@ export default async function ChatbotPage({ params }: Props) {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Auth error — treat as unauthenticated
+    // ignore
   }
 
   if (!user) redirect('/chat/login');
@@ -22,11 +22,10 @@ export default async function ChatbotPage({ params }: Props) {
   let chatbot;
   try {
     chatbot = await getChatbot(id, user.id);
-  } catch (err) {
-    console.error('[chatbase/chatbot] getChatbot error:', err);
+  } catch {
     chatbot = null;
   }
   if (!chatbot) notFound();
 
-  return <ChatbotEditor chatbot={chatbot} />;
+  return <EmbedClient chatbot={chatbot} />;
 }

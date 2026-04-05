@@ -5,8 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 
 const navItems = [
-  { href: '/chat/dashboard', label: 'Dashboard' },
-  { href: '/chat/dashboard/billing', label: 'Billing' },
+  { href: '/chat/dashboard', label: 'Dashboard', exact: true },
+  { href: '/chat/dashboard/conversations', label: 'Conversations', exact: false },
+  { href: '/chat/dashboard/billing', label: 'Billing', exact: false },
 ];
 
 export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
@@ -42,10 +43,9 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
-          const isActive =
-            item.href === '/chat/dashboard'
-              ? pathname === '/chat/dashboard'
-              : pathname.startsWith(item.href);
+          const isActive = item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}

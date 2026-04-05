@@ -1,5 +1,4 @@
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
 import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getChatbot, getServiceClient, type Conversation } from '@/lib/chatbase/db';
 
@@ -39,26 +38,9 @@ export default async function ConversationsPage({ params }: Props) {
   const convList = (conversations ?? []) as Conversation[];
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/chat/dashboard" className="hover:text-indigo-600 transition-colors">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/chat/dashboard/chatbots/${id}`}
-          className="hover:text-indigo-600 transition-colors truncate max-w-xs"
-        >
-          {chatbot.name}
-        </Link>
-        <span>/</span>
-        <span className="text-gray-800 font-medium">Conversations</span>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Conversations</h1>
-        <span className="text-sm text-gray-400">{convList.length} total</span>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm text-gray-400">{convList.length} conversation{convList.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200">

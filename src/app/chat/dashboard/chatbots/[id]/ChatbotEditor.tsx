@@ -39,8 +39,6 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const embedSnippet = `<script src="/api/chat/widget.js" data-chatbot-id="${chatbot.id}"></script>`;
-
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -206,21 +204,6 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
           </button>
         </div>
       </form>
-
-      {/* Embed Snippet */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Embed on Your Website</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Paste this snippet just before the closing{' '}
-          <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">&lt;/body&gt;</code> tag.
-        </p>
-        <div className="flex items-start gap-3">
-          <pre className="flex-1 bg-gray-900 text-green-400 text-xs rounded-lg p-4 overflow-x-auto whitespace-pre-wrap break-all">
-            {embedSnippet}
-          </pre>
-          <CopyButton text={embedSnippet} />
-        </div>
-      </div>
 
       {/* Danger Zone */}
       <div className="bg-white rounded-xl border border-red-200 p-6">
