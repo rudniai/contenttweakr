@@ -4,9 +4,13 @@ import ChatbaseLoginForm from './ChatbaseLoginForm';
 
 export default async function ChatbaseLoginPage() {
   const supabase = createChatbaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth error — show login form
+  }
 
   if (user) redirect('/chatbase/dashboard');
 

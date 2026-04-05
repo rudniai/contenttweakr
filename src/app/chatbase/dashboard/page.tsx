@@ -4,9 +4,13 @@ import { listChatbots, type Chatbot } from '@/lib/chatbase/db';
 
 export default async function ChatbaseDashboardPage() {
   const supabase = createChatbaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (err) {
+    console.error('[chatbase/dashboard] auth.getUser error:', err);
+  }
 
   // User is guaranteed by layout auth check, but keep for type safety
   if (!user) return null;
@@ -87,7 +91,7 @@ export default async function ChatbaseDashboardPage() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold"
                   style={{ backgroundColor: bot.primary_color ?? '#6366f1' }}
                 >
-                  {bot.name.charAt(0).toUpperCase()}
+                  {(bot.name ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

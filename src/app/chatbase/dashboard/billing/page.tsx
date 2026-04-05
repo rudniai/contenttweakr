@@ -5,9 +5,13 @@ import BillingClient from './BillingClient';
 
 export default async function BillingPage() {
   const supabase = createChatbaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth error — treat as unauthenticated
+  }
 
   if (!user) redirect('/chatbase/login');
 
