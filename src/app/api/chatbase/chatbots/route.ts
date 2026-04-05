@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         name: name.trim(),
-        system_prompt: system_prompt ?? null,
-        welcome_message: welcome_message ?? null,
-        primary_color: primary_color ?? null,
-        fallback_message: fallback_message ?? null,
+        system_prompt: system_prompt ?? '',
+        welcome_message: welcome_message ?? 'Hi! How can I help?',
+        primary_color: primary_color ?? '#6366f1',
+        fallback_message: fallback_message ?? '',
       })
       .select('*')
       .single();
