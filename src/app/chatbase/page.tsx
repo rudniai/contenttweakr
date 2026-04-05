@@ -1,138 +1,231 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { getServiceClient, listChatbots, type Chatbot } from '@/lib/chatbase/db';
 
-export default async function ChatbaseDashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/');
-
-  let chatbots: Chatbot[] = [];
-  try {
-    chatbots = await listChatbots(user.id);
-  } catch (err) {
-    console.error('[chatbase/page] listChatbots error:', err);
-  }
-
+export default function ChatbaseLandingPage() {
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Chatbots</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage and deploy your AI chatbots
-          </p>
-        </div>
-        <Link
-          href="/chatbase/chatbots/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="w-4 h-4"
-          >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          New Chatbot
-        </Link>
-      </div>
-
-      {/* Empty state */}
-      {chatbots.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
-          <div className="flex justify-center mb-4">
+    <div className="min-h-screen bg-white">
+      {/* Nav */}
+      <header className="border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="w-12 h-12 text-gray-300"
+              className="w-6 h-6 text-indigo-600"
             >
               <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
               <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
             </svg>
+            <span className="text-lg font-bold text-gray-900">Chatbase</span>
           </div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">
-            No chatbots yet
-          </h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Create your first chatbot to get started.
-          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Get started free
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="max-w-4xl mx-auto px-6 py-24 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full mb-6">
+          <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+          AI-powered chatbots for your website
+        </div>
+        <h1 className="text-5xl font-extrabold text-gray-900 leading-tight mb-6">
+          Build a chatbot trained
+          <br />
+          on your own content
+        </h1>
+        <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
+          Upload your documents, add your URLs, and deploy an AI chatbot to your website in
+          minutes — no coding required.
+        </p>
+        <div className="flex items-center justify-center gap-4">
           <Link
-            href="/chatbase/chatbots/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            href="/"
+            className="px-6 py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
           >
-            Create Chatbot
+            Start for free
+          </Link>
+          <Link
+            href="#how-it-works"
+            className="px-6 py-3 text-sm font-semibold text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            See how it works
           </Link>
         </div>
-      )}
+      </section>
 
-      {/* Chatbot cards */}
-      {chatbots.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {chatbots.map((bot) => (
-            <Link
-              key={bot.id}
-              href={`/chatbase/chatbots/${bot.id}`}
-              className="group block bg-white rounded-xl border border-gray-200 p-5 hover:border-indigo-300 hover:shadow-md transition-all"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold"
-                  style={{ backgroundColor: bot.primary_color ?? '#6366f1' }}
-                >
-                  {bot.name.charAt(0).toUpperCase()}
+      {/* Features */}
+      <section id="how-it-works" className="bg-gray-50 py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
+            Everything you need
+          </h2>
+          <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">
+            From document ingestion to live chat widget — a complete platform for custom AI
+            chatbots.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path fillRule="evenodd" d="M5.625 1.5H9a3.75 3.75 0 013.75 3.75v1.875c0 1.036.84 1.875 1.875 1.875H16.5a3.75 3.75 0 013.75 3.75v7.875c0 1.035-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 01-1.875-1.875V3.375c0-1.036.84-1.875 1.875-1.875zM9.75 14.25a.75.75 0 000 1.5H15a.75.75 0 000-1.5H9.75z" clipRule="evenodd" />
+                    <path d="M14.25 5.25a5.23 5.23 0 00-1.279-3.434 9.768 9.768 0 016.963 6.963A5.23 5.23 0 0016.5 7.5h-1.875a.375.375 0 01-.375-.375V5.25z" />
+                  </svg>
+                ),
+                title: 'Upload your docs',
+                description:
+                  'Add PDFs, text files, markdown, or URLs. We process and embed your content automatically.',
+              },
+              {
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
+                    <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
+                  </svg>
+                ),
+                title: 'Customize your bot',
+                description:
+                  'Set a system prompt, welcome message, brand color, and fallback behavior in seconds.',
+              },
+              {
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path fillRule="evenodd" d="M14.447 3.027a.75.75 0 01.527.92l-4.5 16.5a.75.75 0 01-1.448-.394l4.5-16.5a.75.75 0 01.921-.526zM16.72 6.22a.75.75 0 011.06 0l5.25 5.25a.75.75 0 010 1.06l-5.25 5.25a.75.75 0 11-1.06-1.06L21.44 12l-4.72-4.72a.75.75 0 010-1.06zm-9.44 0a.75.75 0 010 1.06L2.56 12l4.72 4.72a.75.75 0 11-1.06 1.06L.97 12.53a.75.75 0 010-1.06l5.25-5.25a.75.75 0 011.06 0z" clipRule="evenodd" />
+                  </svg>
+                ),
+                title: 'Embed anywhere',
+                description:
+                  'Paste one script tag into your site and your AI chat widget goes live instantly.',
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
+                  {feature.icon}
                 </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-colors"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
               </div>
-              <h2 className="text-sm font-semibold text-gray-900 truncate">
-                {bot.name}
-              </h2>
-              <p className="text-xs text-gray-400 mt-1">
-                Created{' '}
-                {new Date(bot.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </p>
-              <div className="mt-3 flex gap-3">
-                <Link
-                  href={`/chatbase/chatbots/${bot.id}/documents`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-indigo-600 hover:underline"
-                >
-                  Documents
-                </Link>
-                <Link
-                  href={`/chatbase/chatbots/${bot.id}/conversations`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-indigo-600 hover:underline"
-                >
-                  Conversations
-                </Link>
-              </div>
-            </Link>
-          ))}
+            ))}
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* Pricing */}
+      <section className="py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">Simple pricing</h2>
+          <p className="text-gray-500 text-center mb-12">Start free, scale as you grow.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Free',
+                price: '$0',
+                features: ['1 chatbot', '20 documents', '500 messages/month', 'Community support'],
+                cta: 'Get started',
+                highlight: false,
+              },
+              {
+                name: 'Pro',
+                price: '$29/mo',
+                features: ['5 chatbots', '200 documents', '5,000 messages/month', 'Email support', 'Custom branding'],
+                cta: 'Start Pro',
+                highlight: true,
+              },
+              {
+                name: 'Enterprise',
+                price: 'Custom',
+                features: ['Unlimited chatbots', 'Unlimited documents', 'Unlimited messages', 'Priority support', 'SLA guarantee'],
+                cta: 'Contact us',
+                highlight: false,
+              },
+            ].map((plan) => (
+              <div
+                key={plan.name}
+                className={`rounded-2xl border-2 p-6 flex flex-col ${
+                  plan.highlight ? 'border-indigo-500 shadow-lg' : 'border-gray-100'
+                }`}
+              >
+                {plan.highlight && (
+                  <div className="text-center mb-3">
+                    <span className="bg-indigo-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
+                <p className="text-3xl font-extrabold text-gray-900 mb-4">{plan.price}</p>
+                <ul className="flex-1 space-y-2 mb-6">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-indigo-500 flex-shrink-0">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                      </svg>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/"
+                  className={`w-full py-2 px-4 rounded-xl text-sm font-semibold text-center transition-colors ${
+                    plan.highlight
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-indigo-600 py-16">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to build your first chatbot?
+          </h2>
+          <p className="text-indigo-200 mb-8">
+            Sign up for free — no credit card required.
+          </p>
+          <Link
+            href="/"
+            className="inline-block px-8 py-3 bg-white text-indigo-600 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
+          >
+            Get started free
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-100 py-8">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-indigo-600">
+              <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
+              <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
+            </svg>
+            <span className="text-sm font-semibold text-gray-700">Chatbase</span>
+          </div>
+          <p className="text-xs text-gray-400">
+            &copy; {new Date().getFullYear()} Chatbase. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -5,8 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
-  { href: '/chatbase', label: 'Dashboard' },
-  { href: '/chatbase/billing', label: 'Billing' },
+  { href: '/chatbase/dashboard', label: 'Dashboard' },
+  { href: '/chatbase/dashboard/billing', label: 'Billing' },
 ];
 
 export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
@@ -44,8 +44,8 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive =
-            item.href === '/chatbase'
-              ? pathname === '/chatbase'
+            item.href === '/chatbase/dashboard'
+              ? pathname === '/chatbase/dashboard'
               : pathname.startsWith(item.href);
           return (
             <Link

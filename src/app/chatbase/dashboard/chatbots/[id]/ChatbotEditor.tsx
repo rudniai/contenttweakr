@@ -91,7 +91,7 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
         throw new Error(data.error ?? 'Failed to delete chatbot');
       }
 
-      router.push('/chatbase');
+      router.push('/chatbase/dashboard');
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Delete failed');
       setDeleting(false);

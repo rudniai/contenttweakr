@@ -31,12 +31,12 @@ export default async function DocumentsPage({ params }: Props) {
     <div className="p-8 max-w-3xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/chatbase" className="hover:text-indigo-600 transition-colors">
+        <Link href="/chatbase/dashboard" className="hover:text-indigo-600 transition-colors">
           Dashboard
         </Link>
         <span>/</span>
         <Link
-          href={`/chatbase/chatbots/${id}`}
+          href={`/chatbase/dashboard/chatbots/${id}`}
           className="hover:text-indigo-600 transition-colors truncate max-w-xs"
         >
           {chatbot.name}
