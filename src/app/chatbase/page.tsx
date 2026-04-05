@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Script from 'next/script';
 
 export default function ChatbaseLandingPage() {
   return (
@@ -226,6 +227,13 @@ export default function ChatbaseLandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Chatbase demo widget */}
+      <Script
+        src="/api/chatbase/widget.js"
+        data-chatbot-id="013af73e-3846-46a7-80d3-45c15a72e83e"
+        strategy="lazyOnload"
+      />
     </div>
   );
 }
