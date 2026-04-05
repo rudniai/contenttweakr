@@ -5,8 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 
 const navItems = [
-  { href: '/chatbase/dashboard', label: 'Dashboard' },
-  { href: '/chatbase/dashboard/billing', label: 'Billing' },
+  { href: '/chat/dashboard', label: 'Dashboard' },
+  { href: '/chat/dashboard/billing', label: 'Billing' },
 ];
 
 export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
@@ -16,7 +16,7 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
   async function handleSignOut() {
     const supabase = createChatbaseBrowserClient();
     await supabase.auth.signOut();
-    router.push('/chatbase/login');
+    router.push('/chat/login');
   }
 
   return (
@@ -35,7 +35,7 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
               <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
             </svg>
           </span>
-          <span className="text-base font-semibold tracking-tight">Chatbase</span>
+          <span className="text-base font-semibold tracking-tight">ContentTweakr Chat</span>
         </div>
       </div>
 
@@ -43,8 +43,8 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive =
-            item.href === '/chatbase/dashboard'
-              ? pathname === '/chatbase/dashboard'
+            item.href === '/chat/dashboard'
+              ? pathname === '/chat/dashboard'
               : pathname.startsWith(item.href);
           return (
             <Link
@@ -64,6 +64,13 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-gray-800 space-y-3">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          <span>↗</span>
+          <span>ContentTweakr Suite</span>
+        </Link>
         <p className="text-xs text-gray-500 truncate" title={userEmail}>
           {userEmail}
         </p>

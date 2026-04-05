@@ -1,34 +1,38 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import Script from 'next/script';
 
-export default function ChatbaseLandingPage() {
+export default function ChatLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="border-b border-gray-100">
+      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-indigo-600"
-            >
-              <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
-              <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
-            </svg>
-            <span className="text-lg font-bold text-gray-900">Chatbase</span>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-400 font-medium tracking-wide uppercase">ContentTweakr</span>
+            </Link>
+            <span className="text-gray-300">/</span>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
+                  <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
+                  <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
+                </svg>
+              </div>
+              <span className="text-base font-bold text-gray-900">Chat</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/chatbase/login"
+              href="/chat/login"
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
               Sign in
             </Link>
             <Link
-              href="/chatbase/signup"
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              href="/chat/signup"
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Get started free
             </Link>
@@ -37,35 +41,69 @@ export default function ChatbaseLandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full mb-6">
-          <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-          AI-powered chatbots for your website
-        </div>
-        <h1 className="text-5xl font-extrabold text-gray-900 leading-tight mb-6">
-          Build a chatbot trained
-          <br />
-          on your own content
-        </h1>
-        <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-          Upload your documents, add your URLs, and deploy an AI chatbot to your website in
-          minutes — no coding required.
-        </p>
-        <div className="flex items-center justify-center gap-4">
-          <Link
-            href="/chatbase/signup"
-            className="px-6 py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            Start for free
-          </Link>
-          <Link
-            href="#how-it-works"
-            className="px-6 py-3 text-sm font-semibold text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            See how it works
-          </Link>
+      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50/50 to-white pt-20 pb-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold rounded-full mb-6">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                Part of the ContentTweakr Suite
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
+                Build a chatbot trained
+                <br />
+                <span className="text-indigo-600">on your own content</span>
+              </h1>
+              <p className="text-lg text-gray-500 mb-8 leading-relaxed">
+                Upload your documents, add your URLs, and deploy an AI chatbot to your website in
+                minutes — no coding required. Powered by Claude for best-in-class accuracy.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/chat/signup"
+                  className="px-6 py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-center"
+                >
+                  Start for free
+                </Link>
+                <Link
+                  href="#how-it-works"
+                  className="px-6 py-3 text-sm font-semibold text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-center"
+                >
+                  See how it works
+                </Link>
+              </div>
+              <p className="text-xs text-gray-400 mt-3">No credit card required.</p>
+            </div>
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden shadow-2xl shadow-indigo-100 border border-indigo-100">
+                <Image
+                  src="/branding/hero-chat.png"
+                  alt="ContentTweakr Chat interface"
+                  width={600}
+                  height={338}
+                  className="w-full h-auto"
+                  priority
+                />
+              </div>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-indigo-600/10 rounded-full blur-2xl" />
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Social proof badges */}
+      <div className="border-y border-gray-100 py-5 bg-white">
+        <div className="max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-center gap-8 text-sm text-gray-400 font-medium">
+          {['Powered by Claude AI', 'No-code setup', 'Deploy in 5 minutes', 'GDPR compliant'].map((item) => (
+            <div key={item} className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-indigo-500">
+                <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+              </svg>
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Features */}
       <section id="how-it-works" className="bg-gray-50 py-20">
@@ -75,7 +113,7 @@ export default function ChatbaseLandingPage() {
           </h2>
           <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">
             From document ingestion to live chat widget — a complete platform for custom AI
-            chatbots.
+            chatbots trained on your content.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -87,8 +125,7 @@ export default function ChatbaseLandingPage() {
                   </svg>
                 ),
                 title: 'Upload your docs',
-                description:
-                  'Add PDFs, text files, markdown, or URLs. We process and embed your content automatically.',
+                description: 'Add PDFs, text files, markdown, or URLs. We process and embed your content automatically using state-of-the-art embeddings.',
               },
               {
                 icon: (
@@ -98,8 +135,7 @@ export default function ChatbaseLandingPage() {
                   </svg>
                 ),
                 title: 'Customize your bot',
-                description:
-                  'Set a system prompt, welcome message, brand color, and fallback behavior in seconds.',
+                description: 'Set a system prompt, welcome message, brand color, and fallback behavior. Make it feel like a natural extension of your brand.',
               },
               {
                 icon: (
@@ -108,8 +144,7 @@ export default function ChatbaseLandingPage() {
                   </svg>
                 ),
                 title: 'Embed anywhere',
-                description:
-                  'Paste one script tag into your site and your AI chat widget goes live instantly.',
+                description: 'Paste one script tag into your site and your AI chat widget goes live instantly. Works on any website or platform.',
               },
             ].map((feature) => (
               <div key={feature.title} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
@@ -179,7 +214,7 @@ export default function ChatbaseLandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/chatbase/signup"
+                  href="/chat/signup"
                   className={`w-full py-2 px-4 rounded-xl text-sm font-semibold text-center transition-colors ${
                     plan.highlight
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700'
@@ -201,36 +236,52 @@ export default function ChatbaseLandingPage() {
             Ready to build your first chatbot?
           </h2>
           <p className="text-indigo-200 mb-8">
-            Sign up for free — no credit card required.
+            Sign up for free — no credit card required. Part of the ContentTweakr suite.
           </p>
-          <Link
-            href="/chatbase/signup"
-            className="inline-block px-8 py-3 bg-white text-indigo-600 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
-          >
-            Get started free
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/chat/signup"
+              className="inline-block px-8 py-3 bg-white text-indigo-600 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
+            >
+              Get started free
+            </Link>
+            <Link
+              href="/"
+              className="inline-block px-8 py-3 border border-indigo-400 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
+            >
+              Explore the suite
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-indigo-600">
-              <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
-              <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
-            </svg>
-            <span className="text-sm font-semibold text-gray-700">Chatbase</span>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
+              ContentTweakr Suite
+            </Link>
+            <span className="text-gray-300">|</span>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-3 h-3">
+                  <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 00-1.032-.211 50.89 50.89 0 00-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 002.433 3.984L7.28 21.53A.75.75 0 016 21v-4.03a48.527 48.527 0 01-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979z" />
+                  <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 001.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0015.75 7.5z" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold text-gray-700">Chat</span>
+            </div>
           </div>
           <p className="text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} Chatbase. All rights reserved.
+            &copy; {new Date().getFullYear()} ContentTweakr. All rights reserved.
           </p>
         </div>
       </footer>
 
-      {/* Chatbase demo widget */}
+      {/* Chat demo widget */}
       <Script
-        src="/api/chatbase/widget.js"
+        src="/api/chat/widget.js"
         data-chatbot-id="013af73e-3846-46a7-80d3-45c15a72e83e"
         strategy="lazyOnload"
       />

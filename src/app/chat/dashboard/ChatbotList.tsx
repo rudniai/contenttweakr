@@ -11,7 +11,7 @@ export default function ChatbotList({ chatbots }: { chatbots: Chatbot[] }) {
       {chatbots.map((bot) => (
         <Link
           key={bot.id}
-          href={`/chatbase/dashboard/chatbots/${bot.id}`}
+          href={`/chat/dashboard/chatbots/${bot.id}`}
           className="group block bg-white rounded-xl border border-gray-200 p-5 hover:border-indigo-300 hover:shadow-md transition-all"
         >
           <div className="flex items-start justify-between mb-3">
@@ -51,7 +51,7 @@ export default function ChatbotList({ chatbots }: { chatbots: Chatbot[] }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = `/chatbase/dashboard/chatbots/${bot.id}/documents`;
+                window.location.href = `/chat/dashboard/chatbots/${bot.id}/documents`;
               }}
               className="text-xs text-indigo-600 hover:underline cursor-pointer"
             >
@@ -62,7 +62,7 @@ export default function ChatbotList({ chatbots }: { chatbots: Chatbot[] }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = `/chatbase/dashboard/chatbots/${bot.id}/conversations`;
+                window.location.href = `/chat/dashboard/chatbots/${bot.id}/conversations`;
               }}
               className="text-xs text-indigo-600 hover:underline cursor-pointer"
             >

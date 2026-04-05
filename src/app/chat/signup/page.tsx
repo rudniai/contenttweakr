@@ -12,7 +12,7 @@ export default async function ChatbaseSignupPage() {
     // Auth error — show signup form
   }
 
-  if (user) redirect('/chatbase/dashboard');
+  if (user) redirect('/chat/dashboard');
 
   return <ChatbaseSignupForm />;
 }

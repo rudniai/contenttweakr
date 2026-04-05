@@ -39,7 +39,7 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const embedSnippet = `<script src="/api/chatbase/widget.js" data-chatbot-id="${chatbot.id}"></script>`;
+  const embedSnippet = `<script src="/api/chat/widget.js" data-chatbot-id="${chatbot.id}"></script>`;
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +48,7 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
     setSaveSuccess(false);
 
     try {
-      const res = await fetch(`/api/chatbase/chatbots/${chatbot.id}`, {
+      const res = await fetch(`/api/chat/chatbots/${chatbot.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,7 +82,7 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/chatbase/chatbots/${chatbot.id}`, {
+      const res = await fetch(`/api/chat/chatbots/${chatbot.id}`, {
         method: 'DELETE',
       });
 
@@ -91,7 +91,7 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
         throw new Error(data.error ?? 'Failed to delete chatbot');
       }
 
-      router.push('/chatbase/dashboard');
+      router.push('/chat/dashboard');
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Delete failed');
       setDeleting(false);

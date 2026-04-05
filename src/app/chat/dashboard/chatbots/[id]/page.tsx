@@ -18,7 +18,7 @@ export default async function ChatbotPage({ params }: Props) {
     // Auth error — treat as unauthenticated
   }
 
-  if (!user) redirect('/chatbase/login');
+  if (!user) redirect('/chat/login');
 
   let chatbot;
   try {
@@ -33,7 +33,7 @@ export default async function ChatbotPage({ params }: Props) {
     <div className="p-8 max-w-2xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/chatbase/dashboard" className="hover:text-indigo-600 transition-colors">
+        <Link href="/chat/dashboard" className="hover:text-indigo-600 transition-colors">
           Dashboard
         </Link>
         <span>/</span>
@@ -48,13 +48,13 @@ export default async function ChatbotPage({ params }: Props) {
         </div>
         <div className="flex gap-2">
           <Link
-            href={`/chatbase/dashboard/chatbots/${chatbot.id}/documents`}
+            href={`/chat/dashboard/chatbots/${chatbot.id}/documents`}
             className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
           >
             Documents
           </Link>
           <Link
-            href={`/chatbase/dashboard/chatbots/${chatbot.id}/conversations`}
+            href={`/chat/dashboard/chatbots/${chatbot.id}/conversations`}
             className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
           >
             Conversations

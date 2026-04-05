@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${appUrl}/chatbase/dashboard/billing?success=1`,
-      cancel_url: `${appUrl}/chatbase/dashboard/billing?canceled=1`,
+      success_url: `${appUrl}/chat/dashboard/billing?success=1`,
+      cancel_url: `${appUrl}/chat/dashboard/billing?canceled=1`,
       metadata: {
         supabase_user_id: user.id,
         plan_id: plan_id as string,

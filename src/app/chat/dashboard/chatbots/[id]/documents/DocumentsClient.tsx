@@ -36,7 +36,7 @@ export default function DocumentsClient({
 
   async function refreshDocuments() {
     try {
-      const res = await fetch(`/api/chatbase/chatbots/${chatbotId}/documents`);
+      const res = await fetch(`/api/chat/chatbots/${chatbotId}/documents`);
       if (res.ok) {
         const data = await res.json();
         setDocuments(data);
@@ -59,7 +59,7 @@ export default function DocumentsClient({
     formData.append('chatbot_id', chatbotId);
 
     try {
-      const res = await fetch('/api/chatbase/documents', {
+      const res = await fetch('/api/chat/documents', {
         method: 'POST',
         body: formData,
       });
@@ -90,7 +90,7 @@ export default function DocumentsClient({
     setSuccess(null);
 
     try {
-      const res = await fetch('/api/chatbase/documents', {
+      const res = await fetch('/api/chat/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chatbot_id: chatbotId, url }),

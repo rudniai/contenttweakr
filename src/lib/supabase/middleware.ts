@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const isChatbasePath = request.nextUrl.pathname.startsWith("/chatbase/dashboard");
+  const isChatbasePath = request.nextUrl.pathname.startsWith("/chat/dashboard");
 
   const supabaseUrl = isChatbasePath
     ? process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_URL!
@@ -37,9 +37,9 @@ export async function updateSession(request: NextRequest) {
   if (!user) {
     const url = request.nextUrl.clone();
     if (isChatbasePath) {
-      url.pathname = "/chatbase/login";
+      url.pathname = "/chat/login";
     } else {
-      url.pathname = "/";
+      url.pathname = "/fsa";
     }
     return NextResponse.redirect(url);
   }

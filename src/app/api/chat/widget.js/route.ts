@@ -11,7 +11,7 @@ const WIDGET_JS = `(function() {
   var chatbotId = script.getAttribute('data-chatbot-id');
   var primaryColor = script.getAttribute('data-primary-color') || '#6366f1';
   var welcomeMessage = script.getAttribute('data-welcome-message') || 'Hi! How can I help you today?';
-  var apiUrl = script.getAttribute('data-api-url') || (script.src.replace('/api/chatbase/widget.js', '') + '/api/chatbase/chat');
+  var apiUrl = script.getAttribute('data-api-url') || (script.src.replace('/api/chat/widget.js', '') + '/api/chat/chat');
 
   if (!chatbotId) {
     console.error('[Chatbase] Missing data-chatbot-id attribute');

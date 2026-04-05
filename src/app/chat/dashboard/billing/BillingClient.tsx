@@ -43,7 +43,7 @@ export default function BillingClient({
     setError(null);
 
     try {
-      const res = await fetch('/api/chatbase/billing/checkout', {
+      const res = await fetch('/api/chat/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan_id: planId }),

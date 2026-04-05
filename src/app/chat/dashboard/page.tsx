@@ -34,7 +34,7 @@ export default async function ChatbaseDashboardPage() {
           </p>
         </div>
         <Link
-          href="/chatbase/dashboard/chatbots/new"
+          href="/chat/dashboard/chatbots/new"
           className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <svg
@@ -70,7 +70,7 @@ export default async function ChatbaseDashboardPage() {
             Create your first chatbot to get started.
           </p>
           <Link
-            href="/chatbase/dashboard/chatbots/new"
+            href="/chat/dashboard/chatbots/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Create Chatbot

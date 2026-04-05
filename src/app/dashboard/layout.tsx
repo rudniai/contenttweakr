@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
   { href: '/dashboard/reddit-finder', label: 'Scanner' },
@@ -16,6 +17,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/fsa');
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -38,6 +46,12 @@ export default function DashboardLayout({
                 </Link>
               );
             })}
+            <button
+              onClick={handleSignOut}
+              className="ml-auto text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </nav>

@@ -29,7 +29,7 @@ export default function DashboardError({
             Try again
           </button>
           <Link
-            href="/chatbase/dashboard"
+            href="/chat/dashboard"
             className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
             Back to Dashboard

@@ -17,7 +17,7 @@ export default async function ChatbaseDashboardLayout({
   }
 
   if (!user) {
-    redirect('/chatbase/login');
+    redirect('/chat/login');
   }
 
   return (

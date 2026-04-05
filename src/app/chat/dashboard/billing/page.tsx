@@ -13,7 +13,7 @@ export default async function BillingPage() {
     // Auth error — treat as unauthenticated
   }
 
-  if (!user) redirect('/chatbase/login');
+  if (!user) redirect('/chat/login');
 
   let plans: Plan[] = [];
   let subscription: (Subscription & { plan: Plan }) | null = null;

@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FSA ContentTweakr - Content Marketing Intelligence",
-  description: "Find genuine opportunities on Reddit. Generate human-like responses. Build karma organically with AI-powered content marketing.",
+  title: "ContentTweakr — AI-Powered Content Toolkit",
+  description: "The complete AI content suite for businesses. Chat, Write, Social, Email, and Video — one platform, every channel.",
 };
 
 export default function RootLayout({

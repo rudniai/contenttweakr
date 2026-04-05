@@ -23,7 +23,7 @@ export default function NewChatbotPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/chatbase/chatbots', {
+      const res = await fetch('/api/chat/chatbots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -41,7 +41,7 @@ export default function NewChatbotPage() {
       }
 
       const newBot = await res.json();
-      router.push(`/chatbase/dashboard/chatbots/${newBot.id}`);
+      router.push(`/chat/dashboard/chatbots/${newBot.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoading(false);
@@ -52,7 +52,7 @@ export default function NewChatbotPage() {
     <div className="p-8 max-w-2xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/chatbase/dashboard" className="hover:text-indigo-600 transition-colors">
+        <Link href="/chat/dashboard" className="hover:text-indigo-600 transition-colors">
           Dashboard
         </Link>
         <span>/</span>
@@ -168,7 +168,7 @@ export default function NewChatbotPage() {
             {loading ? 'Creating...' : 'Create Chatbot'}
           </button>
           <Link
-            href="/chatbase/dashboard"
+            href="/chat/dashboard"
             className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
             Cancel
