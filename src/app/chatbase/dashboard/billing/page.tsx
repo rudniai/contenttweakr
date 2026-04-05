@@ -11,19 +11,24 @@ export default async function BillingPage() {
 
   if (!user) redirect('/chatbase/login');
 
-  const db = getServiceClient();
+  let plans: Plan[] = [];
+  let subscription: (Subscription & { plan: Plan }) | null = null;
 
-  const [{ data: plansData }, { data: subscriptionData }] = await Promise.all([
-    db.from('cb_plans').select('*').order('price_monthly_cents', { ascending: true }),
-    db
-      .from('cb_subscriptions')
-      .select('*, plan:cb_plans(*)')
-      .eq('user_id', user.id)
-      .maybeSingle(),
-  ]);
-
-  const plans = (plansData ?? []) as Plan[];
-  const subscription = subscriptionData as (Subscription & { plan: Plan }) | null;
+  try {
+    const db = getServiceClient();
+    const [{ data: plansData }, { data: subscriptionData }] = await Promise.all([
+      db.from('cb_plans').select('*').order('price_monthly_cents', { ascending: true }),
+      db
+        .from('cb_subscriptions')
+        .select('*, plan:cb_plans(*)')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ]);
+    plans = (plansData ?? []) as Plan[];
+    subscription = subscriptionData as (Subscription & { plan: Plan }) | null;
+  } catch (err) {
+    console.error('[chatbase/billing] DB error:', err);
+  }
 
   return (
     <div className="p-8 max-w-5xl mx-auto">

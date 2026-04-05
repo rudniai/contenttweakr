@@ -16,7 +16,13 @@ export default async function DocumentsPage({ params }: Props) {
 
   if (!user) redirect('/chatbase/login');
 
-  const chatbot = await getChatbot(id, user.id);
+  let chatbot;
+  try {
+    chatbot = await getChatbot(id, user.id);
+  } catch (err) {
+    console.error('[chatbase/documents] getChatbot error:', err);
+    chatbot = null;
+  }
   if (!chatbot) notFound();
 
   const db = getServiceClient();
