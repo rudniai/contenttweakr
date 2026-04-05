@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (!chatbot) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const body = await request.json();
-    const allowedFields = ['name', 'system_prompt', 'welcome_message', 'primary_color', 'fallback_message'] as const;
+    const allowedFields = ['name', 'system_prompt', 'welcome_message', 'primary_color', 'fallback_message', 'mcp_servers'] as const;
     const updates: Record<string, unknown> = {};
 
     for (const field of allowedFields) {

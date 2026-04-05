@@ -7,6 +7,7 @@ import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 const navItems = [
   { href: '/chat/dashboard', label: 'Dashboard', exact: true },
   { href: '/chat/dashboard/conversations', label: 'Conversations', exact: false },
+  { href: '/chat/dashboard/api-keys', label: 'API Keys', exact: false },
   { href: '/chat/dashboard/billing', label: 'Billing', exact: false },
 ];
 

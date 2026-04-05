@@ -9,6 +9,8 @@ const tabs = [
   { label: 'Conversations', suffix: '/conversations' },
   { label: 'Embed', suffix: '/embed' },
   { label: 'Test', suffix: '/test' },
+  { label: 'Webhooks', suffix: '/webhooks' },
+  { label: 'Connections', suffix: '/connections' },
 ];
 
 export default function ChatbotTabNav({ chatbotId }: { chatbotId: string }) {

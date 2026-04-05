@@ -12,7 +12,7 @@ export async function GET() {
     const db = getServiceClient();
     const { data, error } = await db
       .from('cb_api_keys')
-      .select('id, prefix, created_at, revoked_at')
+      .select('id, prefix, name, created_at, revoked_at')
       .eq('user_id', user.id)
       .is('revoked_at', null)
       .order('created_at', { ascending: false });
@@ -29,11 +29,20 @@ export async function GET() {
   }
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    let name: string | undefined;
+    try {
+      const body = await request.json();
+      name = body.name;
+    } catch {
+      // body is optional
+    }
+    const keyName = name?.trim() || `Key created ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
     // Generate new API key
     const key = 'cb_live_' + crypto.randomUUID().replace(/-/g, '');
@@ -47,8 +56,9 @@ export async function POST(_request: NextRequest) {
         user_id: user.id,
         prefix,
         key_hash: keyHash,
+        name: keyName,
       })
-      .select('id, prefix, created_at')
+      .select('id, prefix, name, created_at')
       .single();
 
     if (error) {

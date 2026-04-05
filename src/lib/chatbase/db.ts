@@ -23,6 +23,12 @@ export function getServiceClient() {
 // Types
 // ---------------------------------------------------------------------------
 
+export type McpServer = {
+  url: string;
+  auth_header?: string;
+  name?: string;
+};
+
 export type Chatbot = {
   id: string;
   user_id: string;
@@ -31,6 +37,7 @@ export type Chatbot = {
   welcome_message: string;
   primary_color: string;
   fallback_message: string;
+  mcp_servers: McpServer[];
   created_at: string;
   updated_at: string;
 };
@@ -67,6 +74,31 @@ export type ConversationTurn = {
   assistant_message: string;
   escalated: boolean;
   metadata: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type Webhook = {
+  id: string;
+  chatbot_id: string;
+  user_id: string;
+  url: string;
+  secret: string | null;
+  events: string[];
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WebhookDelivery = {
+  id: string;
+  webhook_id: string;
+  event: string;
+  payload: Record<string, unknown>;
+  status_code: number | null;
+  response_body: string | null;
+  attempt_count: number;
+  delivered_at: string | null;
+  failed_at: string | null;
   created_at: string;
 };
 
