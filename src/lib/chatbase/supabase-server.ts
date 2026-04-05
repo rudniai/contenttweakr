@@ -4,9 +4,13 @@ import { cookies } from "next/headers";
 export function createChatbaseServerClient() {
   const cookieStore = cookies();
 
+  // Fallback values allow the build to complete when env vars are not yet set.
+  const url = process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_URL ?? "https://placeholder.supabase.co";
+  const anonKey = process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_ANON_KEY ?? "placeholder-anon-key";
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {

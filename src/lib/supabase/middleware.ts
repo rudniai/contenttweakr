@@ -8,9 +8,14 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   if (isChatbaseRoute) {
+    const chatbaseUrl =
+      process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_URL ?? "https://placeholder.supabase.co";
+    const chatbaseKey =
+      process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_ANON_KEY ?? "placeholder-anon-key";
+
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_CHATBASE_SUPABASE_ANON_KEY!,
+      chatbaseUrl,
+      chatbaseKey,
       {
         cookies: {
           getAll() {
