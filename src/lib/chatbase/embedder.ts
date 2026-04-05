@@ -46,7 +46,7 @@ async function embedWithOpenAI(texts: string[]): Promise<number[][]> {
   // Azure OpenAI uses the `api-key` header; standard OpenAI uses Bearer auth.
   const isAzure = endpoint.includes('openai.azure.com') ||
     endpoint.includes('cognitiveservices.azure.com');
-  const authHeaders = isAzure
+  const authHeaders: Record<string, string> = isAzure
     ? { 'api-key': apiKey ?? '' }
     : { Authorization: `Bearer ${apiKey}` };
 

@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getServiceClient } from '@/lib/chatbase/db';
 
-// Disable body parsing — we need the raw body for signature verification
-export const config = {
-  api: { bodyParser: false },
-};
-
 export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json({ error: 'Billing not configured' }, { status: 503 });
@@ -55,8 +50,11 @@ export async function POST(request: NextRequest) {
         if (subscriptionId) {
           try {
             const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
-            periodStart = new Date(stripeSub.current_period_start * 1000).toISOString();
-            periodEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
+            const firstItem = stripeSub.items.data[0];
+            if (firstItem) {
+              periodStart = new Date(firstItem.current_period_start * 1000).toISOString();
+              periodEnd = new Date(firstItem.current_period_end * 1000).toISOString();
+            }
           } catch (err) {
             console.warn('[billing/webhook] Failed to retrieve subscription:', err);
           }
@@ -88,13 +86,14 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
 
+        const firstItem = subscription.items.data[0];
         const { error } = await db
           .from('cb_subscriptions')
           .update({
             stripe_subscription_id: subscription.id,
             status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: firstItem ? new Date(firstItem.current_period_start * 1000).toISOString() : null,
+            current_period_end: firstItem ? new Date(firstItem.current_period_end * 1000).toISOString() : null,
             updated_at: new Date().toISOString(),
           })
           .eq('stripe_customer_id', customerId);
