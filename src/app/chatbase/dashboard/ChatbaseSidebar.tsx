@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 
 const navItems = [
   { href: '/chatbase/dashboard', label: 'Dashboard' },
@@ -13,11 +13,11 @@ export default function ChatbaseSidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const supabase = createClient();
+  const supabase = createChatbaseBrowserClient();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    router.push('/');
+    router.push('/chatbase/login');
   }
 
   return (

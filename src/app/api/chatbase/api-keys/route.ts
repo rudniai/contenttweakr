@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getServiceClient } from '@/lib/chatbase/db';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -31,7 +31,7 @@ export async function GET() {
 
 export async function POST(_request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

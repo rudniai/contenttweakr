@@ -20,13 +20,13 @@ export default function ChatbaseLandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/"
+              href="/chatbase/login"
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
               Sign in
             </Link>
             <Link
-              href="/"
+              href="/chatbase/signup"
               className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Get started free
@@ -52,7 +52,7 @@ export default function ChatbaseLandingPage() {
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link
-            href="/"
+            href="/chatbase/signup"
             className="px-6 py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
           >
             Start for free
@@ -178,7 +178,7 @@ export default function ChatbaseLandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/"
+                  href="/chatbase/signup"
                   className={`w-full py-2 px-4 rounded-xl text-sm font-semibold text-center transition-colors ${
                     plan.highlight
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700'
@@ -203,7 +203,7 @@ export default function ChatbaseLandingPage() {
             Sign up for free — no credit card required.
           </p>
           <Link
-            href="/"
+            href="/chatbase/signup"
             className="inline-block px-8 py-3 bg-white text-indigo-600 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
           >
             Get started free
