@@ -31,24 +31,26 @@ async function embedWithVoyage(texts: string[]): Promise<number[][]> {
 }
 
 async function embedWithOpenAI(texts: string[]): Promise<number[][]> {
-  // OPENAI_EMBEDDING_BASE_URL lets you point at an Azure deployment endpoint
-  // (e.g. https://{resource}.cognitiveservices.azure.com/openai/deployments/{name})
-  // independently of the chat-completions OPENAI_BASE_URL.
-  const baseUrl =
-    process.env.OPENAI_EMBEDDING_BASE_URL ??
-    process.env.OPENAI_BASE_URL ??
-    'https://api.openai.com/v1';
+  // OPENAI_EMBEDDING_BASE_URL accepts either:
+  //   - A full endpoint URL (Azure style, e.g. https://{resource}.openai.azure.com/openai/deployments/{name}/embeddings?api-version=...)
+  //   - A base URL (standard OpenAI style, e.g. https://api.openai.com/v1) — /embeddings is appended automatically
+  const embeddingUrl = process.env.OPENAI_EMBEDDING_BASE_URL;
+  const fallbackBase = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
+  const endpoint = embeddingUrl
+    ? (embeddingUrl.includes('/embeddings') ? embeddingUrl : `${embeddingUrl}/embeddings`)
+    : `${fallbackBase}/embeddings`;
+
   const apiKey =
     process.env.OPENAI_EMBEDDING_API_KEY ?? process.env.OPENAI_API_KEY;
 
   // Azure OpenAI uses the `api-key` header; standard OpenAI uses Bearer auth.
-  const isAzure = baseUrl.includes('cognitiveservices.azure.com') ||
-    baseUrl.includes('openai.azure.com');
+  const isAzure = endpoint.includes('openai.azure.com') ||
+    endpoint.includes('cognitiveservices.azure.com');
   const authHeaders = isAzure
     ? { 'api-key': apiKey ?? '' }
     : { Authorization: `Bearer ${apiKey}` };
 
-  const response = await fetch(`${baseUrl}/embeddings`, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify({
