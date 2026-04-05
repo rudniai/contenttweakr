@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 
 export default function ChatbaseLoginForm() {
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function ChatbaseLoginForm() {
     setError(null);
     setLoading(true);
     try {
-      const supabase = createClient();
+      const supabase = createChatbaseBrowserClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       router.replace('/chatbase/dashboard');

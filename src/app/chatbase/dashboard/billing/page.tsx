@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getServiceClient, type Plan, type Subscription } from '@/lib/chatbase/db';
 import BillingClient from './BillingClient';
 
 export default async function BillingPage() {
-  const supabase = createClient();
+  const supabase = createChatbaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

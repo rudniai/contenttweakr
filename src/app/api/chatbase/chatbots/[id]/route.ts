@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getServiceClient, getChatbot } from '@/lib/chatbase/db';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -23,7 +23,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

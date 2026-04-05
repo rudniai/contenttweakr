@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
 
 export default function ChatbaseSignupForm() {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ export default function ChatbaseSignupForm() {
     setError(null);
     setLoading(true);
     try {
-      const supabase = createClient();
+      const supabase = createChatbaseBrowserClient();
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       setSuccess(true);

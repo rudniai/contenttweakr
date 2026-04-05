@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getChatbot } from '@/lib/chatbase/db';
 import ChatbotEditor from './ChatbotEditor';
 
@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> };
 export default async function ChatbotPage({ params }: Props) {
   const { id } = await params;
 
-  const supabase = createClient();
+  const supabase = createChatbaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import ChatbaseSidebar from './ChatbaseSidebar';
 
 export default async function ChatbaseDashboardLayout({
@@ -7,7 +7,7 @@ export default async function ChatbaseDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
+  const supabase = createChatbaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

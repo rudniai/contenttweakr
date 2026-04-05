@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import { getServiceClient } from '@/lib/chatbase/db';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient();
+    const supabase = createChatbaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

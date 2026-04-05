@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
 import ChatbaseSignupForm from './ChatbaseSignupForm';
 
 export default async function ChatbaseSignupPage() {
-  const supabase = createClient();
+  const supabase = createChatbaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
