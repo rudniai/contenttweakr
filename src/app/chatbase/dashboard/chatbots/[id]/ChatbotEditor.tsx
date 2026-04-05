@@ -53,10 +53,10 @@ export default function ChatbotEditor({ chatbot }: { chatbot: Chatbot }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          system_prompt: systemPrompt || null,
-          welcome_message: welcomeMessage || null,
+          system_prompt: systemPrompt || '',
+          welcome_message: welcomeMessage || '',
           primary_color: primaryColor,
-          fallback_message: fallbackMessage || null,
+          fallback_message: fallbackMessage || '',
         }),
       });
 
