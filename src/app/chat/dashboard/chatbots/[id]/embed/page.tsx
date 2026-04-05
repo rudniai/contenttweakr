@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
-import { getChatbot } from '@/lib/chatbase/db';
+import { getChatbot, getUserPlanLimits } from '@/lib/chatbase/db';
 import EmbedClient from './EmbedClient';
 
 type Props = { params: Promise<{ id: string }> };
@@ -27,5 +27,13 @@ export default async function EmbedPage({ params }: Props) {
   }
   if (!chatbot) notFound();
 
-  return <EmbedClient chatbot={chatbot} />;
+  let isPaidPlan = false;
+  try {
+    const plan = await getUserPlanLimits(user.id);
+    isPaidPlan = plan != null && plan.price_monthly_cents > 0;
+  } catch {
+    // default to free
+  }
+
+  return <EmbedClient chatbot={chatbot} isPaidPlan={isPaidPlan} />;
 }

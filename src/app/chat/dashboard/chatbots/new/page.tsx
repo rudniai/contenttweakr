@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { getTemplateBySlug } from '@/lib/chatbase/templates';
 
-export default function NewChatbotPage() {
+function NewChatbotForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [name, setName] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -14,6 +16,17 @@ export default function NewChatbotPage() {
   const [fallbackMessage, setFallbackMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const templateSlug = searchParams.get('template');
+    if (!templateSlug) return;
+    const template = getTemplateBySlug(templateSlug);
+    if (!template) return;
+    setName(template.name);
+    setSystemPrompt(template.systemPrompt);
+    setWelcomeMessage(template.welcomeMessage);
+    setPrimaryColor(template.primaryColor);
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -176,5 +189,13 @@ export default function NewChatbotPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewChatbotPage() {
+  return (
+    <Suspense>
+      <NewChatbotForm />
+    </Suspense>
   );
 }

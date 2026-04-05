@@ -22,11 +22,11 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function EmbedClient({ chatbot }: { chatbot: Chatbot }) {
+export default function EmbedClient({ chatbot, isPaidPlan }: { chatbot: Chatbot; isPaidPlan: boolean }) {
   const [previewColor, setPreviewColor] = useState(chatbot.primary_color ?? '#6366f1');
   const [previewWelcome, setPreviewWelcome] = useState(chatbot.welcome_message ?? 'Hi! How can I help?');
 
-  const scriptSnippet = `<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/chat/widget.js" data-chatbot-id="${chatbot.id}"></script>`;
+  const scriptSnippet = `<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/chat/widget.js" data-chatbot-id="${chatbot.id}"${isPaidPlan ? ' data-hide-badge="true"' : ''}></script>`;
 
   const apiEndpoint = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/chat/chat`;
 

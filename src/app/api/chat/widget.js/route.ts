@@ -12,6 +12,7 @@ const WIDGET_JS = `(function() {
   var primaryColor = script.getAttribute('data-primary-color') || '#6366f1';
   var welcomeMessage = script.getAttribute('data-welcome-message') || 'Hi! How can I help you today?';
   var apiUrl = script.getAttribute('data-api-url') || (script.src.replace('/api/chat/widget.js', '') + '/api/chat/chat');
+  var hideBadge = script.getAttribute('data-hide-badge') !== null;
 
   if (!chatbotId) {
     console.error('[Chatbase] Missing data-chatbot-id attribute');
@@ -51,7 +52,10 @@ const WIDGET_JS = `(function() {
     '.cb-input{flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:none;height:40px;font-family:inherit}',
     '.cb-input:focus{border-color:' + primaryColor + '}',
     '.cb-send{background:' + primaryColor + ';color:white;border:none;border-radius:8px;padding:0 16px;cursor:pointer;font-size:14px;font-weight:500;white-space:nowrap}',
-    '.cb-send:disabled{opacity:.5;cursor:not-allowed}'
+    '.cb-send:disabled{opacity:.5;cursor:not-allowed}',
+    '.cb-powered-by{text-align:center;padding:6px 12px;font-size:11px;color:#9ca3af;background:#fff;border-top:1px solid #e5e7eb}',
+    '.cb-powered-by a{color:#6366f1;text-decoration:none}',
+    '.cb-powered-by a:hover{text-decoration:underline}'
   ].join('');
   document.head.appendChild(style);
 
@@ -70,7 +74,8 @@ const WIDGET_JS = `(function() {
     '<div class="cb-input-row">',
     '<textarea class="cb-input" id="cb-input-' + chatbotId + '" placeholder="Type a message..." rows="1"></textarea>',
     '<button class="cb-send" id="cb-send-' + chatbotId + '">Send</button>',
-    '</div>'
+    '</div>',
+    hideBadge ? '' : '<div class="cb-powered-by">Powered by <a href="https://contenttweakr.com/?utm_source=widget&utm_medium=badge&utm_campaign=powered_by" target="_blank" rel="noopener">ContentTweakr</a></div>'
   ].join('');
 
   document.body.appendChild(bubble);
