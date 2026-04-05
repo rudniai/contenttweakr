@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
-import { getServiceClient, listChatbots } from '@/lib/chatbase/db';
+import { getServiceClient, listChatbots, getUserPlanLimits } from '@/lib/chatbase/db';
 
 export async function GET() {
   try {
@@ -27,6 +27,21 @@ export async function POST(request: NextRequest) {
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
+    }
+
+    // Enforce chatbot limit based on user's plan
+    const plan = await getUserPlanLimits(user.id);
+    if (plan?.chatbot_limit != null) {
+      const existing = await listChatbots(user.id);
+      if (existing.length >= plan.chatbot_limit) {
+        return NextResponse.json(
+          {
+            error: `Your ${plan.name} plan allows ${plan.chatbot_limit} chatbot${plan.chatbot_limit === 1 ? '' : 's'}. Upgrade to create more.`,
+            code: 'chatbot_limit_exceeded',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const db = getServiceClient();

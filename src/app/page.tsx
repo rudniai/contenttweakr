@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import WaitlistForm from './WaitlistForm'
 
 const products = [
   {
@@ -316,25 +317,7 @@ export default function SuiteLandingPage() {
             Join the waitlist and get early access, founding-member pricing, and a chance to
             shape the product roadmap.
           </p>
-          <form
-            action="https://formspree.io/f/waitlist"
-            method="POST"
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-          >
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-3 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-white text-indigo-700 text-sm font-bold rounded-xl hover:bg-indigo-50 transition-colors whitespace-nowrap"
-            >
-              Notify me
-            </button>
-          </form>
+          <WaitlistForm />
           <p className="text-indigo-300 text-xs mt-4">
             No spam. Unsubscribe anytime. We&apos;ll only email you about product updates.
           </p>

@@ -172,6 +172,35 @@ export async function listChatbots(userId: string): Promise<Chatbot[]> {
 }
 
 /**
+ * Returns the effective plan limits for a user.
+ * If the user has no subscription, returns the Free plan limits.
+ */
+export async function getUserPlanLimits(userId: string): Promise<Plan | null> {
+  const supabase = getServiceClient();
+
+  // Try to get the user's subscription with plan details
+  const { data: sub } = await supabase
+    .from('cb_subscriptions')
+    .select('plan_id, cb_plans(*)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (sub?.cb_plans) {
+    return sub.cb_plans as unknown as Plan;
+  }
+
+  // No active subscription — fall back to the Free plan
+  const { data: freePlan } = await supabase
+    .from('cb_plans')
+    .select('*')
+    .eq('name', 'Free')
+    .maybeSingle();
+
+  return freePlan as Plan | null;
+}
+
+/**
  * Search for chunks similar to the given embedding using pgvector cosine
  * similarity.
  *
