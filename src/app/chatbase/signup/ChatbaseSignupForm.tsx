@@ -17,7 +17,14 @@ export default function ChatbaseSignupForm() {
     setLoading(true);
     try {
       const supabase = createChatbaseBrowserClient();
-      const { error } = await supabase.auth.signUp({ email, password });
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${appUrl}/chatbase/auth/callback`,
+        },
+      });
       if (error) throw error;
       setSuccess(true);
     } catch (err: unknown) {
