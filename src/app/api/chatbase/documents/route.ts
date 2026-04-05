@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { getServiceClient, getChatbot } from '@/lib/chatbase/db';
 import { ingestDocument } from '@/lib/chatbase/ingestion';
 
@@ -7,7 +7,7 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createChatbaseServerClient();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

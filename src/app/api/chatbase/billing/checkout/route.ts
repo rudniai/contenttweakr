@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { getServiceClient } from '@/lib/chatbase/db';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createChatbaseServerClient();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

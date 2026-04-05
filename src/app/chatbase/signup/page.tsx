@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createChatbaseBrowserClient } from '@/lib/chatbase/supabase-browser';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ChatbaseSignupPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ export default function ChatbaseSignupPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
-  const supabase = createChatbaseBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

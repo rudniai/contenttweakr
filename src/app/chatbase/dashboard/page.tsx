@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { createChatbaseServerClient } from '@/lib/chatbase/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { listChatbots, type Chatbot } from '@/lib/chatbase/db';
 
 export default async function ChatbaseDashboardPage() {
-  const supabase = createChatbaseServerClient();
+  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
